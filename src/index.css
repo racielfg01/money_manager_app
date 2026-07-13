@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos globales */
+* {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+  background: #f3f4f6;
+}
+
+.dark body {
+  background: #0b1220;
+}
+
+/* Scrollbar minimalista */
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-track { background: transparent; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+.dark .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Animaciones */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes toastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(20px) scale(0.95); } }
+
+.animate-fade-in { animation: fadeIn 0.25s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out forwards; }
+.animate-toast-in { animation: toastIn 0.3s cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.animate-toast-out { animation: toastOut 0.25s ease-in forwards; }
+
+/* Glass panel */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+}
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+.press-effect { transition: transform 0.1s ease; }
+.press-effect:active { transform: scale(0.97); }
+
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0,0,0,0.2);
+  margin: 0 auto;
+}
+.dark .drag-handle { background: rgba(255,255,255,0.2); }
+
+.view-enter { animation: fadeIn 0.2s ease-out; }
+
+@media (max-width: 640px) {
+  .bottom-sheet { border-radius: 20px 20px 0 0; max-height: 92dvh; }
+}
+@media (min-width: 641px) {
+  .bottom-sheet { border-radius: 20px; max-height: 85vh; }
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+input[type=number] { -moz-appearance: textfield; }
