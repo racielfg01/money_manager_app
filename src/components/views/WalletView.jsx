@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { formatCurrency, formatShortDate } from '../../utils/helpers';
+import { formatCurrency, formatShortDate, resolveCategory } from '../../utils/helpers';
 import Icon from '../common/Icon';
 
 const WalletView = () => {
@@ -39,13 +39,13 @@ const WalletView = () => {
         {recentTx.length === 0 ? <p className="text-gray-400 text-center py-4">Sin movimientos</p> : (
           <div className="space-y-2">
             {recentTx.map(tx => {
-              const cat = categories.find(c => c.id === tx.categoryId);
+              const { cat, sub } = resolveCategory(tx, categories);
               const cfg = tx.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', icon:'ArrowDownLeft'} : {bg:'bg-red-100', text:'text-red-600', icon:'ArrowUpRight'};
               return (
                 <div key={tx.id} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
-                    <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{formatShortDate(tx.date)}</p></div>
+                    <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{formatShortDate(tx.date)}</p></div>
                   </div>
                   <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount)}</p>
                 </div>

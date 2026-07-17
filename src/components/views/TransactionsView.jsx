@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatShortDate } from '../../utils/helpers';
+import { formatCurrency, formatShortDate, resolveCategory } from '../../utils/helpers';
 import Icon from '../common/Icon';
 import Modal from '../common/Modal';
 
@@ -59,9 +59,9 @@ const TransactionsView = () => {
         } else if (d < bounds.start || d > bounds.end) return false;
       }
       if (q) {
-        const cat = categories.find(c => c.id === t.categoryId);
+        const { cat, sub } = resolveCategory(t, categories);
         const wallet = wallets.find(w => w.id === t.walletId);
-        const hay = [t.description, cat?.name, wallet?.name, t.date].filter(Boolean).join(' ').toLowerCase();
+        const hay = [t.description, cat?.name, sub?.name, wallet?.name, t.date].filter(Boolean).join(' ').toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -91,13 +91,13 @@ const TransactionsView = () => {
       <div className="flex-1 overflow-y-auto custom-scroll px-4 sm:px-6 pb-28 space-y-2">
         {filteredTx.length === 0 && <p className="text-center text-gray-400 py-8">Sin movimientos</p>}
         {filteredTx.map(tx => {
-          const cat = categories.find(c => c.id === tx.categoryId);
+          const { cat, sub } = resolveCategory(tx, categories);
           const cfg = tx.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', icon:'ArrowDownLeft'} : tx.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', icon:'ArrowUpRight'} : {bg:'bg-blue-100', text:'text-blue-600', icon:'ArrowLeftRight'};
           return (
             <div key={tx.id} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
-                <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{formatShortDate(tx.date)}</p></div>
+                <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{formatShortDate(tx.date)}</p></div>
               </div>
               <div className="flex items-center gap-2">
                 <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount)}</p>

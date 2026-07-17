@@ -40,6 +40,7 @@ const TransactionModal = () => {
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
   const [catId, setCatId] = useState('');
+  const [subId, setSubId] = useState('');
   const [walletId, setWalletId] = useState(wallets[0]?.id || '');
   const [toWalletId, setToWalletId] = useState(wallets[1]?.id || wallets[0]?.id || '');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -54,6 +55,7 @@ const TransactionModal = () => {
       setAmount('');
       setDesc('');
       setCatId('');
+      setSubId('');
       setWalletId(wallets[0]?.id || '');
       setToWalletId(wallets[1]?.id || wallets[0]?.id || '');
       setDate(new Date().toISOString().split('T')[0]);
@@ -82,6 +84,7 @@ const TransactionModal = () => {
       amount: parseFloat(finalAmount),
       description: desc,
       categoryId: type !== 'transfer' ? catId : null,
+      subcategoryId: type !== 'transfer' && catId ? subId || null : null,
       walletId: type === 'transfer' ? walletId : walletId,
       fromWalletId: type === 'transfer' ? walletId : undefined,
       toWalletId: type === 'transfer' ? toWalletId : undefined,
@@ -227,7 +230,7 @@ const TransactionModal = () => {
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Categoría</label>
               <select
                 value={catId}
-                onChange={e => setCatId(e.target.value)}
+                onChange={e => { setCatId(e.target.value); setSubId(''); }}
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
                 <option value="">Selecciona una categoría</option>
@@ -236,6 +239,21 @@ const TransactionModal = () => {
                 ))}
               </select>
             </div>
+            {catId && (categories.find(c => c.id === catId)?.subcategories || []).length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Subcategoría</label>
+                <select
+                  value={subId}
+                  onChange={e => setSubId(e.target.value)}
+                  className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
+                >
+                  <option value="">Sin subcategoría</option>
+                  {categories.find(c => c.id === catId).subcategories.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Billetera</label>
               <select

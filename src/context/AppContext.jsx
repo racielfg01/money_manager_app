@@ -27,10 +27,11 @@ const defaultSettings = {
   firstDayWeek: 1,
   zerosMode: 2,
   homeScreen: 'wallet',
-  currency: 'USD'
+  currency: 'CUP'
 };
 
 const defaultCurrencies = [
+  { code: 'CUP', name: 'Peso cubano', symbol: '$' },
   { code: 'USD', name: 'Dólar estadounidense', symbol: '$' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
   { code: 'MXN', name: 'Peso mexicano', symbol: '$' },

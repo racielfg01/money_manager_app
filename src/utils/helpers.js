@@ -1,5 +1,11 @@
 export const generateId = () => Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 
+export const resolveCategory = (tx, categories) => {
+  const cat = categories.find(c => c.id === tx.categoryId);
+  const sub = cat?.subcategories?.find(s => s.id === tx.subcategoryId);
+  return { cat, sub };
+};
+
 export const formatCurrency = (amount, currency = 'USD') => {
   return new Intl.NumberFormat('es-ES', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount || 0);
 };

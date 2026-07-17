@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { formatCurrency } from '../../utils/helpers';
+import { formatCurrency, resolveCategory } from '../../utils/helpers';
 
 const StatisticsView = () => {
   const { transactions, categories, settings } = useApp();
@@ -11,11 +11,13 @@ const StatisticsView = () => {
       if (t.type === 'income') income += t.amount;
       else if (t.type === 'expense') {
         expense += t.amount;
-        byCategory[t.categoryId] = (byCategory[t.categoryId] || 0) + t.amount;
+        const { cat, sub } = resolveCategory(t, categories);
+        const key = sub ? `${cat?.id}:${sub.id}` : (cat?.id || 'other');
+        byCategory[key] = (byCategory[key] || 0) + t.amount;
       }
     });
     return { income, expense, net: income - expense, sortedCats: Object.entries(byCategory).sort((a,b) => b[1]-a[1]), totalExp: expense || 1 };
-  }, [transactions]);
+  }, [transactions, categories]);
 
   return (
     <div className="p-4 sm:p-6 pb-28 space-y-5 view-enter">
@@ -29,13 +31,17 @@ const StatisticsView = () => {
         <h3 className="font-bold mb-4">Distribución de Gastos</h3>
         {stats.sortedCats.length === 0 ? <p className="text-gray-400 text-center">Sin datos</p> : (
           <div className="space-y-3">
-            {stats.sortedCats.map(([catId, amount]) => {
+            {stats.sortedCats.map(([key, amount]) => {
+              const [catId, subId] = key.split(':');
               const cat = categories.find(c => c.id === catId) || {name: 'Otros', color: '#6b7280'};
+              const sub = cat.subcategories?.find(s => s.id === subId);
+              const label = sub ? `${cat.name} · ${sub.name}` : cat.name;
+              const color = sub?.color || cat.color;
               const percent = ((amount / stats.totalExp) * 100).toFixed(1);
               return (
-                <div key={catId}>
-                  <div className="flex justify-between text-sm mb-1"><span>{cat.name}</span><span>{percent}%</span></div>
-                  <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2"><div className="h-2 rounded-full transition-all" style={{width: `${percent}%`, backgroundColor: cat.color}}></div></div>
+                <div key={key}>
+                  <div className="flex justify-between text-sm mb-1"><span>{label}</span><span>{percent}%</span></div>
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2"><div className="h-2 rounded-full transition-all" style={{width: `${percent}%`, backgroundColor: color}}></div></div>
                 </div>
               );
             })}
