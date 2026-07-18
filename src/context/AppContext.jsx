@@ -47,6 +47,7 @@ export const AppProvider = ({ children }) => {
   const [currencies, setCurrencies] = useState(() => StorageService.get('currencies') || defaultCurrencies);
   const [view, setView] = useState(() => (StorageService.get('settings')?.homeScreen) || 'wallet');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState(null);
 
   const [budgets, setBudgets] = useState(() => StorageService.get('budgets') || []);
   const [goals, setGoals] = useState(() => StorageService.get('goals') || []);
@@ -106,9 +107,30 @@ export const AppProvider = ({ children }) => {
     setTransactions(prev => prev.filter(t => t.id !== id));
   };
 
+  const updateTransaction = (id, tx) => {
+    const old = transactions.find(t => t.id === id);
+    if (!old) return;
+    const apply = (t, sign) => {
+      if (t.type === 'income') {
+        setWallets(prev => prev.map(w => w.id === t.walletId ? { ...w, balance: parseFloat(w.balance) + sign * parseFloat(t.amount) } : w));
+      } else if (t.type === 'expense') {
+        setWallets(prev => prev.map(w => w.id === t.walletId ? { ...w, balance: parseFloat(w.balance) - sign * parseFloat(t.amount) } : w));
+      } else if (t.type === 'transfer') {
+        setWallets(prev => prev.map(w => {
+          if (w.id === t.fromWalletId) return { ...w, balance: parseFloat(w.balance) - sign * parseFloat(t.amount) };
+          if (w.id === t.toWalletId) return { ...w, balance: parseFloat(w.balance) + sign * parseFloat(t.amount) };
+          return w;
+        }));
+      }
+    };
+    apply(old, -1);
+    apply(tx, 1);
+    setTransactions(prev => prev.map(t => t.id === id ? { ...tx, id } : t));
+  };
+
   const value = {
-    transactions, wallets, accounts, setAccounts, categories, currencies, setCurrencies, settings, setSettings, view, setView, isModalOpen, setIsModalOpen,
-    addTransaction, deleteTransaction, setWallets, setCategories,
+    transactions, wallets, accounts, setAccounts, categories, currencies, setCurrencies, settings, setSettings, view, setView, isModalOpen, setIsModalOpen, editingTx, setEditingTx,
+    addTransaction, deleteTransaction, updateTransaction, setWallets, setCategories,
     budgets, setBudgets, goals, setGoals, debts, setDebts, recurring, setRecurring
   };
 

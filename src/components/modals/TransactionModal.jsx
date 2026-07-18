@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -33,8 +33,14 @@ const evalExpr = (expr) => {
   return typeof r === 'number' && isFinite(r) ? r : NaN;
 };
 
-const TransactionModal = () => {
-  const { isModalOpen, setIsModalOpen, addTransaction, wallets, categories, settings } = useApp();
+const typeLabels = {
+  expense: { label: 'Gasto', icon: 'ArrowUpRight', color: 'red' },
+  income: { label: 'Ingreso', icon: 'ArrowDownLeft', color: 'green' },
+  transfer: { label: 'Transfer.', icon: 'ArrowLeftRight', color: 'blue' }
+};
+
+const TransactionModal = ({ editing = null }) => {
+  const { isModalOpen, setIsModalOpen, setEditingTx, addTransaction, updateTransaction, deleteTransaction, wallets, categories, settings } = useApp();
   const { show } = useToast();
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
@@ -46,11 +52,22 @@ const TransactionModal = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [showCalc, setShowCalc] = useState(false);
   const [calcFresh, setCalcFresh] = useState(false);
+  const skipFocus = useRef(false);
 
   const filteredCats = categories.filter(c => c.type === type);
 
   useEffect(() => {
-    if (isModalOpen) {
+    if (!isModalOpen) return;
+    if (editing) {
+      setType(editing.type);
+      setAmount(String(editing.amount));
+      setDesc(editing.description || '');
+      setCatId(editing.categoryId || '');
+      setSubId(editing.subcategoryId || '');
+      setWalletId(editing.walletId || wallets[0]?.id || '');
+      setToWalletId(editing.toWalletId || wallets[1]?.id || wallets[0]?.id || '');
+      setDate(editing.date || new Date().toISOString().split('T')[0]);
+    } else {
       setType('expense');
       setAmount('');
       setDesc('');
@@ -59,10 +76,18 @@ const TransactionModal = () => {
       setWalletId(wallets[0]?.id || '');
       setToWalletId(wallets[1]?.id || wallets[0]?.id || '');
       setDate(new Date().toISOString().split('T')[0]);
-      setShowCalc(false);
-      setCalcFresh(false);
     }
-  }, [isModalOpen, wallets]);
+    setShowCalc(false);
+    setCalcFresh(false);
+  }, [isModalOpen, editing, wallets]);
+
+  const appendZeros = () => {
+    const zeros = '0'.repeat(settings.zerosMode);
+    setAmount(prev => {
+      if (prev === '' || prev === '0') return zeros;
+      return prev + zeros;
+    });
+  };
 
   const handleSave = () => {
     const finalAmount = isNaN(evalExpr(amount)) ? amount : String(evalExpr(amount));
@@ -90,16 +115,15 @@ const TransactionModal = () => {
       toWalletId: type === 'transfer' ? toWalletId : undefined,
       date
     };
-    addTransaction(txData);
-    show('Transacción guardada', 'success');
-  };
-
-  const appendZeros = () => {
-    const zeros = '0'.repeat(settings.zerosMode);
-    setAmount(prev => {
-      if (prev === '' || prev === '0') return zeros;
-      return prev + zeros;
-    });
+    if (editing) {
+      updateTransaction(editing.id, txData);
+      show('Transacción actualizada', 'success');
+    } else {
+      addTransaction(txData);
+      show('Transacción guardada', 'success');
+    }
+    setIsModalOpen(false);
+    if (setEditingTx) setEditingTx(null);
   };
 
   const handleCalcInput = (val) => {
@@ -135,14 +159,61 @@ const TransactionModal = () => {
     });
   };
 
-  const typeLabels = {
-    expense: { label: 'Gasto', icon: 'ArrowDownRight', color: 'red' },
-    income: { label: 'Ingreso', icon: 'ArrowUpLeft', color: 'green' },
-    transfer: { label: 'Transfer.', icon: 'ArrowLeftRight', color: 'blue' }
+  const openCalcFromFocus = () => {
+    if (skipFocus.current) { skipFocus.current = false; return; }
+    setShowCalc(true);
   };
 
+  const closeCalc = (cancel) => {
+    if (cancel) setAmount('');
+    skipFocus.current = true;
+    setShowCalc(false);
+  };
+
+  if (showCalc) {
+    return (
+      <Modal isOpen={isModalOpen} onClose={() => closeCalc(false)} title="Importe" showDragHandle={false}>
+        <div className="flex flex-col min-h-[70dvh]">
+          <div className="flex flex-col flex-1 justify-center px-2 py-8">
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide text-center">Importe</p>
+            <p className="text-5xl font-bold text-center break-all">{amount || '0.00'}</p>
+          </div>
+          <div className="bg-gray-100 dark:bg-gray-800/70 p-3 rounded-2xl">
+            <div className="grid grid-cols-4 gap-2">
+              {[7,8,9].map(n => (
+                <button key={n} onClick={() => handleCalcInput(String(n))} className="h-14 bg-white dark:bg-gray-700 rounded-xl shadow-sm text-xl font-semibold press-effect hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">{n}</button>
+              ))}
+              <button onClick={() => handleOperator('/')} className="h-14 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl shadow-sm text-xl font-bold press-effect hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors">÷</button>
+              {[4,5,6].map(n => (
+                <button key={n} onClick={() => handleCalcInput(String(n))} className="h-14 bg-white dark:bg-gray-700 rounded-xl shadow-sm text-xl font-semibold press-effect hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">{n}</button>
+              ))}
+              <button onClick={() => handleOperator('*')} className="h-14 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl shadow-sm text-xl font-bold press-effect hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors">×</button>
+              {[1,2,3].map(n => (
+                <button key={n} onClick={() => handleCalcInput(String(n))} className="h-14 bg-white dark:bg-gray-700 rounded-xl shadow-sm text-xl font-semibold press-effect hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">{n}</button>
+              ))}
+              <button onClick={() => handleOperator('-')} className="h-14 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl shadow-sm text-xl font-bold press-effect hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors">−</button>
+              <button onClick={() => handleCalcInput('.')} className="h-14 bg-white dark:bg-gray-700 rounded-xl shadow-sm text-xl font-semibold press-effect hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">.</button>
+              <button onClick={() => handleCalcInput('0')} className="h-14 bg-white dark:bg-gray-700 rounded-xl shadow-sm text-xl font-semibold press-effect hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">0</button>
+              <button onClick={() => handleCalcInput('0'.repeat(settings.zerosMode))} className="h-14 bg-white dark:bg-gray-700 rounded-xl shadow-sm text-xl font-semibold press-effect hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">{'0'.repeat(settings.zerosMode)}</button>
+              <button onClick={() => handleOperator('+')} className="h-14 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 rounded-xl shadow-sm text-xl font-bold press-effect hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors">+</button>
+              <button onClick={() => setAmount('')} className="h-14 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-xl shadow-sm text-sm font-bold press-effect">C</button>
+              <button onClick={() => setAmount(prev => prev.slice(0, -1))} className="h-14 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl shadow-sm font-bold press-effect flex items-center justify-center">
+                <Icon name="Delete" size={20} />
+              </button>
+              <button onClick={handleEquals} className="h-14 bg-green-600 text-white rounded-xl shadow-sm font-bold press-effect hover:bg-green-700 transition-colors">=</button>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <button onClick={() => closeCalc(false)} className="flex-1 py-3.5 rounded-xl font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 press-effect">Cancelar</button>
+            <button onClick={() => closeCalc(false)} className="flex-[2] py-3.5 rounded-xl font-semibold bg-blue-600 text-white press-effect">OK</button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
-    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nueva transacción">
+    <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? 'Editar transacción' : 'Nueva transacción'}>
       <div className="grid grid-cols-3 gap-2 mb-5">
         {Object.entries(typeLabels).map(([key, val]) => {
           const active = type === key;
@@ -171,7 +242,7 @@ const TransactionModal = () => {
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-            onFocus={() => setShowCalc(true)}
+            onFocus={openCalcFromFocus}
             className="w-full text-3xl font-bold p-4 pr-24 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors"
             placeholder="0.00"
             aria-label="Importe"
@@ -294,6 +365,10 @@ const TransactionModal = () => {
               </select>
             </div>
           </>
+        )}
+
+        {editing && (
+          <button onClick={() => { deleteTransaction(editing.id); setIsModalOpen(false); show('Eliminado', 'success'); }} className="w-full py-3 rounded-xl font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 press-effect">Eliminar transacción</button>
         )}
       </div>
 

@@ -10,7 +10,7 @@ import CalendarView from '../views/CalendarView';
 import SettingsView from '../views/SettingsView';
 
 const MainLayout = () => {
-  const { view, isModalOpen } = useApp();
+  const { view, isModalOpen, editingTx, setEditingTx } = useApp();
 
   const renderView = () => {
     switch(view) {
@@ -31,7 +31,7 @@ const MainLayout = () => {
         </main>
         {!isModalOpen && view !== 'settings' && <Fab />}
         <BottomNav />
-        <TransactionModal />
+        <TransactionModal editing={editingTx} onEditingChange={setEditingTx} />
       </div>
     </div>
   );

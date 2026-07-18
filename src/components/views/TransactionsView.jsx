@@ -35,7 +35,7 @@ const getBounds = (p) => {
 };
 
 const TransactionsView = () => {
-  const { transactions, deleteTransaction, categories, wallets } = useApp();
+  const { transactions, deleteTransaction, categories, wallets, setIsModalOpen, setEditingTx } = useApp();
   const { show } = useToast();
   const [type, setType] = useState('all');
   const [period, setPeriod] = useState('all');
@@ -43,6 +43,7 @@ const TransactionsView = () => {
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [open, setOpen] = useState(false);
+  const [detail, setDetail] = useState(null);
 
   const hasFilters = type !== 'all' || period !== 'all' || !!search || !!customFrom || !!customTo;
 
@@ -92,17 +93,14 @@ const TransactionsView = () => {
         {filteredTx.length === 0 && <p className="text-center text-gray-400 py-8">Sin movimientos</p>}
         {filteredTx.map(tx => {
           const { cat, sub } = resolveCategory(tx, categories);
-          const cfg = tx.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', icon:'ArrowDownLeft'} : tx.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', icon:'ArrowUpRight'} : {bg:'bg-blue-100', text:'text-blue-600', icon:'ArrowLeftRight'};
+          const cfg = tx.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', icon:'ArrowUpRight'} : tx.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', icon:'ArrowDownLeft'} : {bg:'bg-blue-100', text:'text-blue-600', icon:'ArrowLeftRight'};
           return (
-            <div key={tx.id} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group">
+            <div key={tx.id} onClick={() => setDetail(tx)} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
                 <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{formatShortDate(tx.date)}</p></div>
               </div>
-              <div className="flex items-center gap-2">
-                <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount)}</p>
-                <button onClick={() => { deleteTransaction(tx.id); show('Eliminado', 'success'); }} className="opacity-0 group-hover:opacity-100 p-2 text-red-500"><Icon name="Trash2" size={14}/></button>
-              </div>
+              <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount)}</p>
             </div>
           )
         })}
@@ -153,6 +151,37 @@ const TransactionsView = () => {
             <button onClick={() => setOpen(false)} className="flex-[2] py-3 rounded-xl font-semibold bg-blue-600 text-white press-effect">Ver resultados ({filteredTx.length})</button>
           </div>
         </div>
+      </Modal>
+
+      <Modal isOpen={!!detail} onClose={() => setDetail(null)} title="Detalle de movimiento">
+        {detail && (() => {
+          const { cat, sub } = resolveCategory(detail, categories);
+          const wallet = wallets.find(w => w.id === detail.walletId);
+          const cfg = detail.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', label:'Ingreso'} : detail.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', label:'Gasto'} : {bg:'bg-blue-100', text:'text-blue-600', label:'Transferencia'};
+          return (
+            <div className="space-y-4">
+              <div className="flex flex-col items-center text-center py-2">
+                <div className={`w-16 h-16 rounded-2xl ${cfg.bg} ${cfg.text} flex items-center justify-center mb-3`}><Icon name={cat?.icon || 'Wallet'} size={30} /></div>
+                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type==='expense'?'-':'+'}{formatCurrency(detail.amount)}</p>
+                <p className="text-sm text-gray-500 mt-1">{cfg.label}</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500">Descripción</span><span className="font-semibold text-right">{detail.description || cat?.name || '—'}</span></div>
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500">Categoría</span><span className="font-semibold text-right">{cat?.name || '—'}{sub ? ` · ${sub.name}` : ''}</span></div>
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500">Billetera</span><span className="font-semibold text-right">{wallet?.name || '—'}</span></div>
+                <div className="flex justify-between py-2"><span className="text-gray-500">Fecha</span><span className="font-semibold">{formatShortDate(detail.date)}</span></div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => { setDetail(null); setEditingTx(detail); setIsModalOpen(true); }} className="flex-1 py-3 rounded-xl font-semibold bg-blue-600 text-white press-effect flex items-center justify-center gap-2">
+                  <Icon name="Pencil" size={16} /> Editar
+                </button>
+                <button onClick={() => { deleteTransaction(detail.id); setDetail(null); show('Eliminado', 'success'); }} className="flex-1 py-3 rounded-xl font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 press-effect flex items-center justify-center gap-2">
+                  <Icon name="Trash2" size={16} /> Eliminar
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </Modal>
     </div>
   );
