@@ -22,14 +22,13 @@ const WalletView = () => {
       </div>
       <section>
         <h3 className="text-lg font-bold mb-3">Mis Billeteras</h3>
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-3">
           {wallets.map(w => (
-            <div key={w.id} className="bg-white dark:bg-carddark p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md"><Icon name={w.icon || 'CreditCard'} size={20} /></div>
-                <div className="text-left"><p className="font-semibold">{w.name}</p><p className="text-xs text-gray-500">{w.currency}</p></div>
-              </div>
-              <span className="font-bold text-lg">{formatCurrency(w.balance, w.currency)}</span>
+            <div key={w.id} className="bg-white dark:bg-carddark p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md mb-2"><Icon name={w.icon || 'CreditCard'} size={20} /></div>
+              <p className="font-semibold text-sm">{w.name}</p>
+              <p className="text-xs text-gray-500 mb-1">{w.currency}</p>
+              <p className="font-bold text-lg">{formatCurrency(w.balance, w.currency)}</p>
             </div>
           ))}
         </div>

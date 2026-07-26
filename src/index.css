@@ -19,7 +19,11 @@ body {
 
 .dark body {
   background: #0b1220;
+  color: #e5e7eb;
 }
+
+.dark .text-gray-500 { color: #6b7280 !important; }
+.dark .text-gray-400 { color: #9ca3af !important; }
 
 /* Scrollbar minimalista */
 .custom-scroll::-webkit-scrollbar { width: 6px; }

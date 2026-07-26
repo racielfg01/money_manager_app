@@ -93,6 +93,7 @@ const TransactionsView = () => {
         {filteredTx.length === 0 && <p className="text-center text-gray-400 py-8">Sin movimientos</p>}
         {filteredTx.map(tx => {
           const { cat, sub } = resolveCategory(tx, categories);
+          const w = wallets.find(w => w.id === tx.walletId);
           const cfg = tx.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', icon:'ArrowUpRight'} : tx.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', icon:'ArrowDownLeft'} : {bg:'bg-blue-100', text:'text-blue-600', icon:'ArrowLeftRight'};
           return (
             <div key={tx.id} onClick={() => setDetail(tx)} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group cursor-pointer">
@@ -100,7 +101,7 @@ const TransactionsView = () => {
                 <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
                 <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{formatShortDate(tx.date)}</p></div>
               </div>
-              <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount)}</p>
+              <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount, w?.currency)}</p>
             </div>
           )
         })}
@@ -162,7 +163,7 @@ const TransactionsView = () => {
             <div className="space-y-4">
               <div className="flex flex-col items-center text-center py-2">
                 <div className={`w-16 h-16 rounded-2xl ${cfg.bg} ${cfg.text} flex items-center justify-center mb-3`}><Icon name={cat?.icon || 'Wallet'} size={30} /></div>
-                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type==='expense'?'-':'+'}{formatCurrency(detail.amount)}</p>
+                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type==='expense'?'-':'+'}{formatCurrency(detail.amount, wallet?.currency)}</p>
                 <p className="text-sm text-gray-500 mt-1">{cfg.label}</p>
               </div>
               <div className="space-y-2 text-sm">
