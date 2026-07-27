@@ -120,74 +120,101 @@ const TransactionsView = () => {
     const dayName = d.toLocaleDateString('es-ES', { weekday: 'long' });
     const dayNum = d.getDate();
     const month = d.toLocaleDateString('es-ES', { month: 'short' });
-    return { dayName, dayNum, month };
+    const isToday = new Date().toISOString().slice(0, 10) === dateStr;
+    const isYesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10) === dateStr;
+    let label = dayName;
+    if (isToday) label = 'Hoy';
+    else if (isYesterday) label = 'Ayer';
+    return { label, dayNum, month, isToday };
   };
 
   return (
     <div className="flex flex-col h-full view-enter">
       <div className="p-4 sm:p-6 pb-2 space-y-3">
         <header className="flex items-center justify-between mb-1">
-          <button onClick={() => setAccountDrawer(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-semibold press-effect">
+          <button onClick={() => setAccountDrawer(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-carddark border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold press-effect transition-all duration-200 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600">
             <Icon name="Building2" size={16} /> {currentAccount?.name || 'Cuenta'}
           </button>
-          <button onClick={() => setOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-semibold press-effect">
+          <button onClick={() => setOpen(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white dark:bg-carddark border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 text-sm font-semibold press-effect transition-all duration-200 hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600">
             <Icon name="Search" size={16} /> Buscar
           </button>
         </header>
 
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-3 text-center">
-            <p className="text-xs text-green-600 font-semibold">Ingresos</p>
-            <p className="text-base font-bold text-green-700">{formatCurrency(summary.income, summary.currency)}</p>
+        <div className="grid grid-cols-3 gap-2.5">
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200/50 dark:border-green-800/30 rounded-2xl p-3.5 text-center transition-all duration-200">
+            <p className="text-[10px] uppercase tracking-wider text-green-600 font-bold mb-1">Ingresos</p>
+            <p className="text-sm font-bold text-green-700 dark:text-green-400">{formatCurrency(summary.income, summary.currency)}</p>
           </div>
-          <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-3 text-center">
-            <p className="text-xs text-red-600 font-semibold">Gastos</p>
-            <p className="text-base font-bold text-red-700">{formatCurrency(summary.expense, summary.currency)}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200/50 dark:border-red-800/30 rounded-2xl p-3.5 text-center transition-all duration-200">
+            <p className="text-[10px] uppercase tracking-wider text-red-600 font-bold mb-1">Gastos</p>
+            <p className="text-sm font-bold text-red-700 dark:text-red-400">{formatCurrency(summary.expense, summary.currency)}</p>
           </div>
-          <div className={`rounded-2xl p-3 text-center ${summary.total >= 0 ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
-            <p className={`text-xs font-semibold ${summary.total >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Total</p>
-            <p className={`text-base font-bold ${summary.total >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>{formatCurrency(summary.total, summary.currency)}</p>
+          <div className={`border rounded-2xl p-3.5 text-center transition-all duration-200 ${summary.total >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200/50 dark:border-blue-800/30' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200/50 dark:border-orange-800/30'}`}>
+            <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${summary.total >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Total</p>
+            <p className={`text-sm font-bold ${summary.total >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-orange-700 dark:text-orange-400'}`}>{formatCurrency(summary.total, summary.currency)}</p>
           </div>
         </div>
 
         {hasFilters && (
-          <button onClick={clearFilters} className="text-xs font-semibold text-blue-600 flex items-center gap-1 press-effect">
+          <button onClick={clearFilters} className="text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 press-effect transition-colors duration-200 hover:text-blue-700 dark:hover:text-blue-300">
             <Icon name="FilterX" size={14} /> Filtros activos · Limpiar
           </button>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scroll px-4 sm:px-6 pb-28 space-y-4">
-        {groupedTx.length === 0 && <p className="text-center text-gray-400 py-8">Sin movimientos</p>}
+      <div className="flex-1 overflow-y-auto custom-scroll px-4 sm:px-6 pb-28 space-y-5">
+        {groupedTx.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+              <Icon name="ArrowLeftRight" size={28} className="text-gray-300 dark:text-gray-600" />
+            </div>
+            <p className="text-gray-400 dark:text-gray-500 text-sm font-medium">Sin movimientos</p>
+          </div>
+        )}
         {groupedTx.map(({ date, txs, income, expense, currency }) => {
-          const { dayName, dayNum, month } = formatDateHeader(date);
+          const { label, dayNum, month, isToday } = formatDateHeader(date);
           return (
-            <div key={date}>
-              <div className="flex items-center justify-between mb-2 px-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold">{dayNum}</span>
-                  <div className="leading-tight">
-                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 capitalize">{dayName}</p>
-                    <p className="text-xs text-gray-400">{month}</p>
+            <div key={date} className="space-y-2.5">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${isToday ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}>
+                    {dayNum}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold capitalize">{label}</p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500">{month}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs font-semibold">
-                  {expense > 0 && <span className="text-red-600">-{formatCurrency(expense, currency)}</span>}
-                  {income > 0 && <span className="text-green-600">+{formatCurrency(income, currency)}</span>}
+                <div className="flex items-center gap-2.5 text-[11px] font-bold">
+                  {expense > 0 && <span className="text-red-500 dark:text-red-400">-{formatCurrency(expense, currency)}</span>}
+                  {income > 0 && <span className="text-green-500 dark:text-green-400">+{formatCurrency(income, currency)}</span>}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {txs.map(tx => {
                   const { cat, sub } = resolveCategory(tx, categories);
                   const w = wallets.find(w => w.id === tx.walletId);
-                  const cfg = tx.type === 'income' ? { bg: 'bg-green-100', text: 'text-green-600', icon: 'ArrowUpRight' } : tx.type === 'expense' ? { bg: 'bg-red-100', text: 'text-red-600', icon: 'ArrowDownLeft' } : { bg: 'bg-blue-100', text: 'text-blue-600', icon: 'ArrowLeftRight' };
+                  const cfg = tx.type === 'income'
+                    ? { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', icon: 'ArrowUpRight' }
+                    : tx.type === 'expense'
+                      ? { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', icon: 'ArrowDownLeft' }
+                      : { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', icon: 'ArrowLeftRight' };
                   return (
-                    <div key={tx.id} onClick={() => setDetail(tx)} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
-                        <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{w?.name}</p></div>
+                    <div
+                      key={tx.id}
+                      onClick={() => setDetail(tx)}
+                      className="bg-white dark:bg-carddark border border-gray-100 dark:border-gray-800 p-3.5 rounded-2xl flex items-center gap-3.5 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-700 active:scale-[0.98]"
+                    >
+                      <div className={`w-11 h-11 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center flex-shrink-0 transition-transform duration-200`}>
+                        <Icon name={cat?.icon || cfg.icon} size={18} />
                       </div>
-                      <p className={`font-bold ${cfg.text}`}>{tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount, w?.currency)}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-800 dark:text-gray-200 truncate">{tx.description || cat?.name}</p>
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">{sub ? `${sub.name} · ` : ''}{w?.name}</p>
+                      </div>
+                      <p className={`font-bold text-sm flex-shrink-0 ${cfg.text}`}>
+                        {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount, w?.currency)}
+                      </p>
                     </div>
                   );
                 })}
@@ -208,23 +235,21 @@ const TransactionsView = () => {
               className="w-full pl-9 pr-3 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 focus:outline-none focus:border-blue-500 text-sm"
             />
           </div>
-
           <div>
             <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Tipo</p>
             <div className="flex gap-2">
               {['all', 'income', 'expense'].map(f => (
-                <button key={f} onClick={() => setType(f)} className={`flex-1 py-2 rounded-lg text-sm font-semibold press-effect ${type === f ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                <button key={f} onClick={() => setType(f)} className={`flex-1 py-2 rounded-lg text-sm font-semibold press-effect transition-all duration-200 ${type === f ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
                   {f === 'all' ? 'Todos' : f === 'income' ? 'Ingresos' : 'Gastos'}
                 </button>
               ))}
             </div>
           </div>
-
           <div>
             <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Rango de tiempo</p>
             <div className="grid grid-cols-3 gap-2">
               {PERIODS.map(p => (
-                <button key={p.id} onClick={() => setPeriod(p.id)} className={`py-2 rounded-lg text-sm font-semibold press-effect ${period === p.id ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
+                <button key={p.id} onClick={() => setPeriod(p.id)} className={`py-2 rounded-lg text-sm font-semibold press-effect transition-all duration-200 ${period === p.id ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}>
                   {p.label}
                 </button>
               ))}
@@ -236,10 +261,9 @@ const TransactionsView = () => {
               </div>
             )}
           </div>
-
           <div className="flex gap-3 pt-1">
-            <button onClick={clearFilters} className="flex-1 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 press-effect">Limpiar</button>
-            <button onClick={() => setOpen(false)} className="flex-[2] py-3 rounded-xl font-semibold bg-blue-600 text-white press-effect">Ver resultados ({filteredTx.length})</button>
+            <button onClick={clearFilters} className="flex-1 py-3 rounded-xl font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 press-effect transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700">Limpiar</button>
+            <button onClick={() => setOpen(false)} className="flex-[2] py-3 rounded-xl font-semibold bg-blue-600 text-white press-effect transition-all duration-200 shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/40">Ver resultados ({filteredTx.length})</button>
           </div>
         </div>
       </Modal>
@@ -248,25 +272,25 @@ const TransactionsView = () => {
         {detail && (() => {
           const { cat, sub } = resolveCategory(detail, categories);
           const wallet = wallets.find(w => w.id === detail.walletId);
-          const cfg = detail.type === 'income' ? { bg: 'bg-green-100', text: 'text-green-600', label: 'Ingreso' } : detail.type === 'expense' ? { bg: 'bg-red-100', text: 'text-red-600', label: 'Gasto' } : { bg: 'bg-blue-100', text: 'text-blue-600', label: 'Transferencia' };
+          const cfg = detail.type === 'income' ? { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400', label: 'Ingreso' } : detail.type === 'expense' ? { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-600 dark:text-red-400', label: 'Gasto' } : { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', label: 'Transferencia' };
           return (
             <div className="space-y-4">
               <div className="flex flex-col items-center text-center py-2">
                 <div className={`w-16 h-16 rounded-2xl ${cfg.bg} ${cfg.text} flex items-center justify-center mb-3`}><Icon name={cat?.icon || 'Wallet'} size={30} /></div>
                 <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type === 'expense' ? '-' : '+'}{formatCurrency(detail.amount, wallet?.currency)}</p>
-                <p className="text-sm text-gray-500 mt-1">{cfg.label}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{cfg.label}</p>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500">Descripción</span><span className="font-semibold text-right">{detail.description || cat?.name || '—'}</span></div>
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500">Categoría</span><span className="font-semibold text-right">{cat?.name || '—'}{sub ? ` · ${sub.name}` : ''}</span></div>
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500">Billetera</span><span className="font-semibold text-right">{wallet?.name || '—'}</span></div>
-                <div className="flex justify-between py-2"><span className="text-gray-500">Fecha</span><span className="font-semibold">{formatShortDate(detail.date)}</span></div>
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500 dark:text-gray-400">Descripción</span><span className="font-semibold text-right text-gray-800 dark:text-gray-200">{detail.description || cat?.name || '—'}</span></div>
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500 dark:text-gray-400">Categoría</span><span className="font-semibold text-right text-gray-800 dark:text-gray-200">{cat?.name || '—'}{sub ? ` · ${sub.name}` : ''}</span></div>
+                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800"><span className="text-gray-500 dark:text-gray-400">Billetera</span><span className="font-semibold text-right text-gray-800 dark:text-gray-200">{wallet?.name || '—'}</span></div>
+                <div className="flex justify-between py-2"><span className="text-gray-500 dark:text-gray-400">Fecha</span><span className="font-semibold text-gray-800 dark:text-gray-200">{formatShortDate(detail.date)}</span></div>
               </div>
               <div className="flex gap-3 pt-2">
-                <button onClick={() => { setDetail(null); setEditingTx(detail); setIsModalOpen(true); }} className="flex-1 py-3 rounded-xl font-semibold bg-blue-600 text-white press-effect flex items-center justify-center gap-2">
+                <button onClick={() => { setDetail(null); setEditingTx(detail); setIsModalOpen(true); }} className="flex-1 py-3 rounded-xl font-semibold bg-blue-600 text-white press-effect flex items-center justify-center gap-2 transition-all duration-200 shadow-md shadow-blue-500/25 hover:shadow-lg">
                   <Icon name="Pencil" size={16} /> Editar
                 </button>
-                <button onClick={() => { deleteTransaction(detail.id); setDetail(null); show('Eliminado', 'success'); }} className="flex-1 py-3 rounded-xl font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 press-effect flex items-center justify-center gap-2">
+                <button onClick={() => { deleteTransaction(detail.id); setDetail(null); show('Eliminado', 'success'); }} className="flex-1 py-3 rounded-xl font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 press-effect flex items-center justify-center gap-2 transition-all duration-200 border border-red-200/50 dark:border-red-800/30 hover:bg-red-100 dark:hover:bg-red-900/40">
                   <Icon name="Trash2" size={16} /> Eliminar
                 </button>
               </div>
@@ -279,18 +303,19 @@ const TransactionsView = () => {
         <div className="space-y-4">
           <div className="space-y-2">
             {accounts.map(a => (
-              <button key={a.id} onClick={() => { setSelectedAccountId(a.id); setAccountDrawer(false); }} className={`w-full text-left p-3.5 rounded-2xl border press-effect flex items-center gap-3 ${selectedAccountId === a.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600' : 'bg-white dark:bg-carddark border-gray-100 dark:border-gray-800'}`}>
-                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><Icon name={a.icon || 'User'} size={18} /></div>
-                <div>
-                  <p className="font-semibold text-sm">{a.name}</p>
-                  <p className="text-xs text-gray-500">{wallets.filter(w => w.accountId === a.id).length} billetera{wallets.filter(w => w.accountId === a.id).length !== 1 ? 's' : ''}</p>
+              <button key={a.id} onClick={() => { setSelectedAccountId(a.id); setAccountDrawer(false); }} className={`w-full text-left p-3.5 rounded-2xl border press-effect flex items-center gap-3 transition-all duration-200 ${selectedAccountId === a.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600 shadow-md shadow-blue-500/10' : 'bg-white dark:bg-carddark border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-md'}`}>
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0"><Icon name={a.icon || 'User'} size={18} /></div>
+                <div className="flex-1">
+                  <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">{a.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">{wallets.filter(w => w.accountId === a.id).length} billetera{wallets.filter(w => w.accountId === a.id).length !== 1 ? 's' : ''}</p>
                 </div>
+                {selectedAccountId === a.id && <Icon name="Check" size={16} className="text-blue-600 dark:text-blue-400 flex-shrink-0" />}
               </button>
             ))}
           </div>
           <div className="flex gap-2">
             <input value={newAccountName} onChange={e => setNewAccountName(e.target.value)} placeholder="Nueva cuenta..." className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-sm focus:outline-none focus:border-blue-500" onKeyDown={e => e.key === 'Enter' && createAccount()} />
-            <button onClick={createAccount} className="px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold press-effect text-sm">Crear</button>
+            <button onClick={createAccount} className="px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold press-effect text-sm transition-all duration-200 shadow-md shadow-blue-500/25 hover:shadow-lg">Crear</button>
           </div>
         </div>
       </Modal>
