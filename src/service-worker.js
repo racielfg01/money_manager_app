@@ -3,7 +3,6 @@ const CACHE = 'money-manager-v1';
 const manifest = self.__WB_MANIFEST || [];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE).then((cache) =>
       Promise.all(
