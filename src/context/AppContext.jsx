@@ -31,11 +31,11 @@ const defaultSettings = {
 };
 
 const defaultCurrencies = [
-  { code: 'CUP', name: 'Peso cubano', symbol: '$' },
-  { code: 'USD', name: 'Dólar estadounidense', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' },
-  { code: 'MXN', name: 'Peso mexicano', symbol: '$' },
-  { code: 'COP', name: 'Peso colombiano', symbol: '$' }
+  { code: 'CUP', name: 'Peso cubano', symbol: '$', decimals: 2 },
+  { code: 'USD', name: 'Dólar estadounidense', symbol: '$', decimals: 2 },
+  { code: 'EUR', name: 'Euro', symbol: '€', decimals: 2 },
+  { code: 'MXN', name: 'Peso mexicano', symbol: '$', decimals: 2 },
+  { code: 'COP', name: 'Peso colombiano', symbol: '$', decimals: 2 }
 ];
 
 export const AppProvider = ({ children }) => {

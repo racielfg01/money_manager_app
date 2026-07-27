@@ -9,11 +9,11 @@ const CurrenciesAdmin = () => {
   const { currencies, setCurrencies, wallets, settings, setSettings } = useApp();
   const { show } = useToast();
   const [editing, setEditing] = useState(null);
-  const [formData, setFormData] = useState({ code: '', name: '', symbol: '' });
+  const [formData, setFormData] = useState({ code: '', name: '', symbol: '', decimals: 2 });
 
   const openEdit = (c) => {
     setEditing(c ? c.code : 'new');
-    setFormData(c || { code: '', name: '', symbol: '' });
+    setFormData(c ? { ...c } : { code: '', name: '', symbol: '', decimals: 2 });
   };
 
   const save = () => {
@@ -22,11 +22,13 @@ const CurrenciesAdmin = () => {
     if (!/^[A-Z]{3}$/.test(code)) return show('El código debe tener 3 letras', 'error');
     const exists = currencies.some(c => c.code === code && c.code !== editing);
     if (exists) return show('Esa moneda ya existe', 'error');
+    const decimals = Math.max(0, Math.min(10, parseInt(formData.decimals) || 2));
+    const data = { code, name: formData.name.trim(), symbol: formData.symbol.trim() || code, decimals };
     if (editing === 'new') {
-      setCurrencies([...currencies, { code, name: formData.name.trim(), symbol: formData.symbol.trim() || code }]);
+      setCurrencies([...currencies, data]);
       show('Moneda creada', 'success');
     } else {
-      setCurrencies(currencies.map(c => c.code === editing ? { ...c, code, name: formData.name.trim(), symbol: formData.symbol.trim() || code } : c));
+      setCurrencies(currencies.map(c => c.code === editing ? data : c));
       if (settings.currency === editing) setSettings({ ...settings, currency: code });
       show('Moneda actualizada', 'success');
     }
@@ -90,6 +92,10 @@ const CurrenciesAdmin = () => {
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Símbolo</label>
             <input value={formData.symbol} onChange={e => setFormData({ ...formData, symbol: e.target.value })} className="w-full p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700" placeholder="$" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Decimales (0-10)</label>
+            <input type="number" min={0} max={10} value={formData.decimals} onChange={e => setFormData({ ...formData, decimals: parseInt(e.target.value) || 0 })} className="w-full p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700" />
           </div>
           <button onClick={save} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold press-effect">Guardar</button>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -40,8 +40,9 @@ const typeLabels = {
 };
 
 const TransactionModal = ({ editing = null }) => {
-  const { isModalOpen, setIsModalOpen, setEditingTx, addTransaction, updateTransaction, deleteTransaction, wallets, categories, settings } = useApp();
+  const { isModalOpen, setIsModalOpen, setEditingTx, addTransaction, updateTransaction, deleteTransaction, wallets, categories, settings, currencies } = useApp();
   const { show } = useToast();
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
@@ -333,7 +334,7 @@ const TransactionModal = ({ editing = null }) => {
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
                 {wallets.map(w => (
-                  <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, w.currency)}</option>
+                  <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, getCurrency(w.currency))}</option>
                 ))}
               </select>
             </div>
@@ -348,7 +349,7 @@ const TransactionModal = ({ editing = null }) => {
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
                 {wallets.map(w => (
-                  <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, w.currency)}</option>
+                  <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, getCurrency(w.currency))}</option>
                 ))}
               </select>
             </div>
@@ -360,7 +361,7 @@ const TransactionModal = ({ editing = null }) => {
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 dark:focus:border-green-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
                 {wallets.filter(w => w.id !== walletId).map(w => (
-                  <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, w.currency)}</option>
+                  <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, getCurrency(w.currency))}</option>
                 ))}
               </select>
             </div>

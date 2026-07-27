@@ -6,8 +6,10 @@ export const resolveCategory = (tx, categories) => {
   return { cat, sub };
 };
 
-export const formatCurrency = (amount, currency = 'USD') => {
-  return new Intl.NumberFormat('es-ES', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount || 0);
+export const formatCurrency = (amount, currency = 'USD', decimals) => {
+  const code = typeof currency === 'string' ? currency : currency?.code || 'USD';
+  const dec = decimals ?? (typeof currency === 'object' ? currency?.decimals ?? 2 : 2);
+  return new Intl.NumberFormat('es-ES', { style: 'currency', currency: code, minimumFractionDigits: dec, maximumFractionDigits: dec }).format(amount || 0);
 };
 
 export const formatDate = (dateStr) => {

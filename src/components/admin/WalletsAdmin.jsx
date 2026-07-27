@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, generateId } from '../../utils/helpers';
@@ -10,6 +10,7 @@ const WalletsAdmin = () => {
   const { wallets, setWallets, accounts, currencies, settings } = useApp();
   const { show } = useToast();
   const [editing, setEditing] = useState(null);
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [formData, setFormData] = useState({ name: '', balance: 0, currency: settings.currency, icon: 'wallet', accountId: accounts[0]?.id });
 
   const openEdit = (w) => {
@@ -64,7 +65,7 @@ const WalletsAdmin = () => {
               onDelete={remove}
               icon={w.icon || 'Wallet'}
               colorClass="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-              subtext={`${formatCurrency(w.balance, w.currency)} • ${w.currency}`}
+              subtext={`${formatCurrency(w.balance, getCurrency(w.currency))} • ${w.currency}`}
             />
           ))}
         </div>

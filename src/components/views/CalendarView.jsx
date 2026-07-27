@@ -1,16 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency } from '../../utils/helpers';
 import Icon from '../common/Icon';
 
 const CalendarView = () => {
-  const { transactions, wallets, settings } = useApp();
+  const { transactions, wallets, settings, currencies } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayOfWeek = new Date(year, month, 1).getDay();
+
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
 
   const getTxForDay = (day) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -26,9 +28,9 @@ const CalendarView = () => {
     const totalIncome = income.reduce((s, t) => s + parseFloat(t.amount), 0);
     const totalExpense = expense.reduce((s, t) => s + parseFloat(t.amount), 0);
     const findCurrency = (tx) => wallets.find(w => w.id === tx.walletId)?.currency;
-    const primaryCurrency = income[0] ? findCurrency(income[0]) : expense[0] ? findCurrency(expense[0]) : settings.currency;
+    const primaryCurrency = getCurrency(income[0] ? findCurrency(income[0]) : expense[0] ? findCurrency(expense[0]) : settings.currency);
     return { income, expense, totalIncome, totalExpense, currency: primaryCurrency };
-  }, [selectedDay, transactions, wallets, settings, year, month]);
+  }, [selectedDay, transactions, wallets, settings, year, month, getCurrency]);
 
   return (
     <div className="p-4 sm:p-6 pb-28 view-enter">

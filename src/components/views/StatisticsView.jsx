@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency, resolveCategory } from '../../utils/helpers';
 
 const StatisticsView = () => {
-  const { transactions, categories, settings } = useApp();
+  const { transactions, categories, settings, currencies } = useApp();
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const stats = useMemo(() => {
     let income = 0, expense = 0;
     const byCategory = {};
@@ -23,9 +24,9 @@ const StatisticsView = () => {
     <div className="p-4 sm:p-6 pb-28 space-y-5 view-enter">
       <header><h1 className="text-2xl font-bold">Estadísticas</h1></header>
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl"><p className="text-xs text-green-600 font-bold">Ingresos</p><p className="font-bold text-green-700 dark:text-green-300 mt-1 text-sm">{formatCurrency(stats.income, settings.currency)}</p></div>
-        <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-2xl"><p className="text-xs text-red-600 font-bold">Gastos</p><p className="font-bold text-red-700 dark:text-red-300 mt-1 text-sm">{formatCurrency(stats.expense, settings.currency)}</p></div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-2xl"><p className="text-xs text-blue-600 font-bold">Neto</p><p className="font-bold text-blue-700 dark:text-blue-300 mt-1 text-sm">{formatCurrency(stats.net, settings.currency)}</p></div>
+        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-2xl"><p className="text-xs text-green-600 font-bold">Ingresos</p><p className="font-bold text-green-700 dark:text-green-300 mt-1 text-sm">{formatCurrency(stats.income, getCurrency(settings.currency))}</p></div>
+        <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-2xl"><p className="text-xs text-red-600 font-bold">Gastos</p><p className="font-bold text-red-700 dark:text-red-300 mt-1 text-sm">{formatCurrency(stats.expense, getCurrency(settings.currency))}</p></div>
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-2xl"><p className="text-xs text-blue-600 font-bold">Neto</p><p className="font-bold text-blue-700 dark:text-blue-300 mt-1 text-sm">{formatCurrency(stats.net, getCurrency(settings.currency))}</p></div>
       </div>
       <div className="bg-white dark:bg-carddark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
         <h3 className="font-bold mb-4">Distribución de Gastos</h3>

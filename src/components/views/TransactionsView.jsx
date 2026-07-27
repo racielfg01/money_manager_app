@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatShortDate, resolveCategory, generateId } from '../../utils/helpers';
@@ -35,7 +35,7 @@ const getBounds = (p) => {
 };
 
 const TransactionsView = () => {
-  const { transactions, deleteTransaction, categories, wallets, accounts, setAccounts, setIsModalOpen, setEditingTx } = useApp();
+  const { transactions, deleteTransaction, categories, wallets, accounts, setAccounts, currencies, setIsModalOpen, setEditingTx } = useApp();
   const { show } = useToast();
   const [type, setType] = useState('all');
   const [period, setPeriod] = useState('all');
@@ -47,6 +47,8 @@ const TransactionsView = () => {
   const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id || '');
   const [accountDrawer, setAccountDrawer] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
+
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
 
   const currentAccount = accounts.find(a => a.id === selectedAccountId);
 
@@ -83,8 +85,8 @@ const TransactionsView = () => {
       else if (t.type === 'expense') exp += parseFloat(t.amount);
     });
     const curr = wallets.find(w => w.accountId === selectedAccountId)?.currency || 'USD';
-    return { income: inc, expense: exp, total: inc - exp, currency: curr };
-  }, [filteredTx, wallets, selectedAccountId]);
+    return { income: inc, expense: exp, total: inc - exp, currency: getCurrency(curr) };
+  }, [filteredTx, wallets, selectedAccountId, getCurrency]);
 
   const groupedTx = useMemo(() => {
     const groups = {};
@@ -94,11 +96,11 @@ const TransactionsView = () => {
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a)).map(([date, txs]) => {
       let inc = 0, exp = 0;
-      const curr = wallets.find(w => w.id === txs[0].walletId)?.currency;
+      const curr = getCurrency(wallets.find(w => w.id === txs[0].walletId)?.currency);
       txs.forEach(t => { if (t.type === 'income') inc += parseFloat(t.amount); else if (t.type === 'expense') exp += parseFloat(t.amount); });
       return { date, txs, income: inc, expense: exp, currency: curr };
     });
-  }, [filteredTx, wallets]);
+  }, [filteredTx, wallets, getCurrency]);
 
   const clearFilters = () => {
     setType('all'); setPeriod('all'); setSearch(''); setCustomFrom(''); setCustomTo('');
@@ -213,7 +215,7 @@ const TransactionsView = () => {
                         <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate mt-0.5">{sub ? `${sub.name} · ` : ''}{w?.name}</p>
                       </div>
                       <p className={`font-bold text-sm flex-shrink-0 ${cfg.text}`}>
-                        {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount, w?.currency)}
+                        {tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount, getCurrency(w?.currency))}
                       </p>
                     </div>
                   );
@@ -277,7 +279,7 @@ const TransactionsView = () => {
             <div className="space-y-4">
               <div className="flex flex-col items-center text-center py-2">
                 <div className={`w-16 h-16 rounded-2xl ${cfg.bg} ${cfg.text} flex items-center justify-center mb-3`}><Icon name={cat?.icon || 'Wallet'} size={30} /></div>
-                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type === 'expense' ? '-' : '+'}{formatCurrency(detail.amount, wallet?.currency)}</p>
+                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type === 'expense' ? '-' : '+'}{formatCurrency(detail.amount, getCurrency(wallet?.currency))}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{cfg.label}</p>
               </div>
               <div className="space-y-2 text-sm">
