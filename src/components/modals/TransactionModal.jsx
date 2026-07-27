@@ -34,8 +34,8 @@ const evalExpr = (expr) => {
 };
 
 const typeLabels = {
-  expense: { label: 'Gasto', icon: 'ArrowUpRight', color: 'red' },
   income: { label: 'Ingreso', icon: 'ArrowDownLeft', color: 'green' },
+  expense: { label: 'Gasto', icon: 'ArrowUpRight', color: 'red' },
   transfer: { label: 'Transfer.', icon: 'ArrowLeftRight', color: 'blue' }
 };
 

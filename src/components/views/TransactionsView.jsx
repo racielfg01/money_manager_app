@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
-import { formatCurrency, formatShortDate, resolveCategory } from '../../utils/helpers';
+import { formatCurrency, formatShortDate, resolveCategory, generateId } from '../../utils/helpers';
 import Icon from '../common/Icon';
 import Modal from '../common/Modal';
 
@@ -35,7 +35,7 @@ const getBounds = (p) => {
 };
 
 const TransactionsView = () => {
-  const { transactions, deleteTransaction, categories, wallets, setIsModalOpen, setEditingTx } = useApp();
+  const { transactions, deleteTransaction, categories, wallets, accounts, setAccounts, setIsModalOpen, setEditingTx } = useApp();
   const { show } = useToast();
   const [type, setType] = useState('all');
   const [period, setPeriod] = useState('all');
@@ -44,13 +44,20 @@ const TransactionsView = () => {
   const [customTo, setCustomTo] = useState('');
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
+  const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id || '');
+  const [accountDrawer, setAccountDrawer] = useState(false);
+  const [newAccountName, setNewAccountName] = useState('');
+
+  const currentAccount = accounts.find(a => a.id === selectedAccountId);
 
   const hasFilters = type !== 'all' || period !== 'all' || !!search || !!customFrom || !!customTo;
 
   const filteredTx = useMemo(() => {
     const q = search.trim().toLowerCase();
     const bounds = period === 'all' ? null : getBounds(period);
+    const accountWalletIds = wallets.filter(w => w.accountId === selectedAccountId).map(w => w.id);
     return transactions.filter(t => {
+      if (accountWalletIds.length && !accountWalletIds.includes(t.walletId)) return false;
       if (type !== 'all' && t.type !== type) return false;
       if (bounds) {
         const d = new Date(t.date + 'T00:00:00');
@@ -67,21 +74,82 @@ const TransactionsView = () => {
       }
       return true;
     });
-  }, [transactions, type, period, search, customFrom, customTo, categories, wallets]);
+  }, [transactions, type, period, search, customFrom, customTo, categories, wallets, selectedAccountId]);
+
+  const summary = useMemo(() => {
+    let inc = 0, exp = 0;
+    filteredTx.forEach(t => {
+      if (t.type === 'income') inc += parseFloat(t.amount);
+      else if (t.type === 'expense') exp += parseFloat(t.amount);
+    });
+    const curr = wallets.find(w => w.accountId === selectedAccountId)?.currency || 'USD';
+    return { income: inc, expense: exp, total: inc - exp, currency: curr };
+  }, [filteredTx, wallets, selectedAccountId]);
+
+  const groupedTx = useMemo(() => {
+    const groups = {};
+    filteredTx.forEach(tx => {
+      if (!groups[tx.date]) groups[tx.date] = [];
+      groups[tx.date].push(tx);
+    });
+    return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a)).map(([date, txs]) => {
+      let inc = 0, exp = 0;
+      const curr = wallets.find(w => w.id === txs[0].walletId)?.currency;
+      txs.forEach(t => { if (t.type === 'income') inc += parseFloat(t.amount); else if (t.type === 'expense') exp += parseFloat(t.amount); });
+      return { date, txs, income: inc, expense: exp, currency: curr };
+    });
+  }, [filteredTx, wallets]);
 
   const clearFilters = () => {
     setType('all'); setPeriod('all'); setSearch(''); setCustomFrom(''); setCustomTo('');
+  };
+
+  const createAccount = () => {
+    const name = newAccountName.trim();
+    if (!name) return;
+    const newAcc = { id: generateId(), name, icon: 'User' };
+    setAccounts(prev => [...prev, newAcc]);
+    setSelectedAccountId(newAcc.id);
+    setNewAccountName('');
+    setAccountDrawer(false);
+    show('Cuenta creada', 'success');
+  };
+
+  const formatDateHeader = (dateStr) => {
+    const d = new Date(dateStr + 'T00:00:00');
+    const dayName = d.toLocaleDateString('es-ES', { weekday: 'long' });
+    const dayNum = d.getDate();
+    const month = d.toLocaleDateString('es-ES', { month: 'short' });
+    return { dayName, dayNum, month };
   };
 
   return (
     <div className="flex flex-col h-full view-enter">
       <div className="p-4 sm:p-6 pb-2 space-y-3">
         <header className="flex items-center justify-between mb-1">
-          <h1 className="text-2xl font-bold">Movimientos</h1>
+          <button onClick={() => setAccountDrawer(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-semibold press-effect">
+            <Icon name="Building2" size={16} /> {currentAccount?.name || 'Cuenta'}
+          </button>
           <button onClick={() => setOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-semibold press-effect">
             <Icon name="Search" size={16} /> Buscar
           </button>
         </header>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-3 text-center">
+            <p className="text-xs text-green-600 font-semibold">Ingresos</p>
+            <p className="text-base font-bold text-green-700">{formatCurrency(summary.income, summary.currency)}</p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-900/20 rounded-2xl p-3 text-center">
+            <p className="text-xs text-red-600 font-semibold">Gastos</p>
+            <p className="text-base font-bold text-red-700">{formatCurrency(summary.expense, summary.currency)}</p>
+          </div>
+          <div className={`rounded-2xl p-3 text-center ${summary.total >= 0 ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
+            <p className={`text-xs font-semibold ${summary.total >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Total</p>
+            <p className={`text-base font-bold ${summary.total >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>{formatCurrency(summary.total, summary.currency)}</p>
+          </div>
+        </div>
+
         {hasFilters && (
           <button onClick={clearFilters} className="text-xs font-semibold text-blue-600 flex items-center gap-1 press-effect">
             <Icon name="FilterX" size={14} /> Filtros activos · Limpiar
@@ -89,21 +157,43 @@ const TransactionsView = () => {
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scroll px-4 sm:px-6 pb-28 space-y-2">
-        {filteredTx.length === 0 && <p className="text-center text-gray-400 py-8">Sin movimientos</p>}
-        {filteredTx.map(tx => {
-          const { cat, sub } = resolveCategory(tx, categories);
-          const w = wallets.find(w => w.id === tx.walletId);
-          const cfg = tx.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', icon:'ArrowUpRight'} : tx.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', icon:'ArrowDownLeft'} : {bg:'bg-blue-100', text:'text-blue-600', icon:'ArrowLeftRight'};
+      <div className="flex-1 overflow-y-auto custom-scroll px-4 sm:px-6 pb-28 space-y-4">
+        {groupedTx.length === 0 && <p className="text-center text-gray-400 py-8">Sin movimientos</p>}
+        {groupedTx.map(({ date, txs, income, expense, currency }) => {
+          const { dayName, dayNum, month } = formatDateHeader(date);
           return (
-            <div key={tx.id} onClick={() => setDetail(tx)} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
-                <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{formatShortDate(tx.date)}</p></div>
+            <div key={date}>
+              <div className="flex items-center justify-between mb-2 px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold">{dayNum}</span>
+                  <div className="leading-tight">
+                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 capitalize">{dayName}</p>
+                    <p className="text-xs text-gray-400">{month}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-xs font-semibold">
+                  {expense > 0 && <span className="text-red-600">-{formatCurrency(expense, currency)}</span>}
+                  {income > 0 && <span className="text-green-600">+{formatCurrency(income, currency)}</span>}
+                </div>
               </div>
-              <p className={`font-bold ${cfg.text}`}>{tx.type==='expense'?'-':'+'}{formatCurrency(tx.amount, w?.currency)}</p>
+              <div className="space-y-2">
+                {txs.map(tx => {
+                  const { cat, sub } = resolveCategory(tx, categories);
+                  const w = wallets.find(w => w.id === tx.walletId);
+                  const cfg = tx.type === 'income' ? { bg: 'bg-green-100', text: 'text-green-600', icon: 'ArrowUpRight' } : tx.type === 'expense' ? { bg: 'bg-red-100', text: 'text-red-600', icon: 'ArrowDownLeft' } : { bg: 'bg-blue-100', text: 'text-blue-600', icon: 'ArrowLeftRight' };
+                  return (
+                    <div key={tx.id} onClick={() => setDetail(tx)} className="bg-white dark:bg-carddark p-3.5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 flex justify-between items-center group cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-xl ${cfg.bg} ${cfg.text} flex items-center justify-center`}><Icon name={cat?.icon || cfg.icon} size={18} /></div>
+                        <div><p className="font-semibold text-sm">{tx.description || cat?.name}</p><p className="text-xs text-gray-500">{sub ? `${sub.name} · ` : ''}{w?.name}</p></div>
+                      </div>
+                      <p className={`font-bold ${cfg.text}`}>{tx.type === 'expense' ? '-' : '+'}{formatCurrency(tx.amount, w?.currency)}</p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          )
+          );
         })}
       </div>
 
@@ -158,12 +248,12 @@ const TransactionsView = () => {
         {detail && (() => {
           const { cat, sub } = resolveCategory(detail, categories);
           const wallet = wallets.find(w => w.id === detail.walletId);
-          const cfg = detail.type === 'income' ? {bg:'bg-green-100', text:'text-green-600', label:'Ingreso'} : detail.type === 'expense' ? {bg:'bg-red-100', text:'text-red-600', label:'Gasto'} : {bg:'bg-blue-100', text:'text-blue-600', label:'Transferencia'};
+          const cfg = detail.type === 'income' ? { bg: 'bg-green-100', text: 'text-green-600', label: 'Ingreso' } : detail.type === 'expense' ? { bg: 'bg-red-100', text: 'text-red-600', label: 'Gasto' } : { bg: 'bg-blue-100', text: 'text-blue-600', label: 'Transferencia' };
           return (
             <div className="space-y-4">
               <div className="flex flex-col items-center text-center py-2">
                 <div className={`w-16 h-16 rounded-2xl ${cfg.bg} ${cfg.text} flex items-center justify-center mb-3`}><Icon name={cat?.icon || 'Wallet'} size={30} /></div>
-                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type==='expense'?'-':'+'}{formatCurrency(detail.amount, wallet?.currency)}</p>
+                <p className={`text-3xl font-bold ${cfg.text}`}>{detail.type === 'expense' ? '-' : '+'}{formatCurrency(detail.amount, wallet?.currency)}</p>
                 <p className="text-sm text-gray-500 mt-1">{cfg.label}</p>
               </div>
               <div className="space-y-2 text-sm">
@@ -183,6 +273,26 @@ const TransactionsView = () => {
             </div>
           );
         })()}
+      </Modal>
+
+      <Modal isOpen={accountDrawer} onClose={() => setAccountDrawer(false)} title="Cuentas">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            {accounts.map(a => (
+              <button key={a.id} onClick={() => { setSelectedAccountId(a.id); setAccountDrawer(false); }} className={`w-full text-left p-3.5 rounded-2xl border press-effect flex items-center gap-3 ${selectedAccountId === a.id ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600' : 'bg-white dark:bg-carddark border-gray-100 dark:border-gray-800'}`}>
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><Icon name={a.icon || 'User'} size={18} /></div>
+                <div>
+                  <p className="font-semibold text-sm">{a.name}</p>
+                  <p className="text-xs text-gray-500">{wallets.filter(w => w.accountId === a.id).length} billetera{wallets.filter(w => w.accountId === a.id).length !== 1 ? 's' : ''}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input value={newAccountName} onChange={e => setNewAccountName(e.target.value)} placeholder="Nueva cuenta..." className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-sm focus:outline-none focus:border-blue-500" onKeyDown={e => e.key === 'Enter' && createAccount()} />
+            <button onClick={createAccount} className="px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold press-effect text-sm">Crear</button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

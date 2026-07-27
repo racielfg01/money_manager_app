@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { formatCurrency } from '../../utils/helpers';
 import Icon from '../common/Icon';
-import Modal from '../common/Modal';
 
 const CalendarView = () => {
   const { transactions, wallets, settings } = useApp();
@@ -49,7 +48,7 @@ const CalendarView = () => {
             const hasIncome = txs.some(t => t.type === 'income');
             const hasExpense = txs.some(t => t.type === 'expense');
             return (
-              <button key={day} onClick={() => txs.length > 0 && setSelectedDay(day)} className="aspect-square rounded-xl flex flex-col items-center justify-center relative bg-gray-50 dark:bg-gray-800/50 press-effect">
+              <button key={day} onClick={() => txs.length > 0 && setSelectedDay(selectedDay === day ? null : day)} className={`aspect-square rounded-xl flex flex-col items-center justify-center relative press-effect ${selectedDay === day ? 'bg-blue-100 dark:bg-blue-900/40 ring-2 ring-blue-500' : 'bg-gray-50 dark:bg-gray-800/50'}`}>
                 <span className="text-sm font-medium">{day}</span>
                 {(hasIncome || hasExpense) && (
                   <div className="flex gap-0.5 mt-1">
@@ -63,9 +62,15 @@ const CalendarView = () => {
         </div>
       </div>
 
-      <Modal isOpen={!!selectedDay} onClose={() => setSelectedDay(null)} title={selectedDay ? `Día ${selectedDay}` : ''}>
-        {selectedData && (
-          <div className="space-y-4">
+      {selectedDay && selectedData && (
+        <div className="mt-4 bg-white dark:bg-carddark rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold">{selectedDay} de {currentDate.toLocaleString('es-ES', { month: 'long' })}</h3>
+            <button onClick={() => setSelectedDay(null)} className="p-1 rounded-full bg-gray-100 dark:bg-gray-800"><Icon name="X" size={14} /></button>
+          </div>
+          {selectedData.income.length + selectedData.expense.length === 0 ? (
+            <p className="text-center text-gray-400 py-4">Sin movimientos este día</p>
+          ) : (
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-green-50 dark:bg-green-900/20 rounded-2xl p-4 text-center">
                 <Icon name="TrendingUp" size={20} className="text-green-500 mx-auto mb-1" />
@@ -80,12 +85,9 @@ const CalendarView = () => {
                 <p className="text-xs text-red-500">{selectedData.expense.length} transacción{selectedData.expense.length !== 1 ? 'es' : ''}</p>
               </div>
             </div>
-            {selectedData.income.length + selectedData.expense.length === 0 && (
-              <p className="text-center text-gray-400 py-4">Sin movimientos este día</p>
-            )}
-          </div>
-        )}
-      </Modal>
+          )}
+        </div>
+      )}
     </div>
   );
 };
