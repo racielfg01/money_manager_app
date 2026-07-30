@@ -23,7 +23,8 @@ const CurrenciesAdmin = () => {
     if (!/^[A-Z]{3}$/.test(code)) return show('El código debe tener 3 letras', 'error');
     const exists = currencies.some(c => c.code === code && c.code !== editing);
     if (exists) return show('Esa moneda ya existe', 'error');
-    const decimals = Math.max(0, Math.min(10, parseInt(formData.decimals) || 2));
+    const d = parseInt(formData.decimals);
+    const decimals = Math.max(0, Math.min(10, isNaN(d) ? 2 : d));
     const data = { code, name: formData.name.trim(), symbol: formData.symbol.trim() || code, decimals };
     if (editing === 'new') {
       setCurrencies([...currencies, data]);
