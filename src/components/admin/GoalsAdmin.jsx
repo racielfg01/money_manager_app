@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, formatDate, generateId } from '../../utils/helpers';
@@ -6,8 +6,9 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const GoalsAdmin = () => {
-  const { goals, setGoals } = useApp();
+  const { goals, setGoals, settings, currencies } = useApp();
   const { show } = useToast();
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ name: '', targetAmount: 0, currentAmount: 0, deadline: '' });
 
@@ -53,7 +54,7 @@ const GoalsAdmin = () => {
               </div>
               <div className="mt-2">
                 <div className="flex justify-between text-xs mb-1">
-                  <span>{formatCurrency(g.currentAmount)}</span>
+                  <span>{formatCurrency(g.currentAmount, getCurrency(settings.currency))}</span>
                   <span>{percent}%</span>
                 </div>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">

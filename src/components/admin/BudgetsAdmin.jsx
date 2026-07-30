@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, generateId } from '../../utils/helpers';
@@ -6,8 +6,9 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const BudgetsAdmin = () => {
-  const { budgets, setBudgets, categories } = useApp();
+  const { budgets, setBudgets, categories, settings, currencies } = useApp();
   const { show } = useToast();
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ categoryId: '', limit: 0 });
 
@@ -59,7 +60,7 @@ const BudgetsAdmin = () => {
                 </div>
               </div>
               <div className="flex justify-between items-end">
-                <span className="text-lg font-bold">{formatCurrency(b.limit)}</span>
+                <span className="text-lg font-bold">{formatCurrency(b.limit, getCurrency(settings.currency))}</span>
                 <span className="text-xs text-gray-400">0% gastado</span>
               </div>
             </div>

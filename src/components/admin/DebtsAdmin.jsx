@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, generateId } from '../../utils/helpers';
@@ -6,8 +6,9 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const DebtsAdmin = () => {
-  const { debts, setDebts } = useApp();
+  const { debts, setDebts, settings, currencies } = useApp();
   const { show } = useToast();
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ name: '', amount: 0, type: 'owed_to_me', date: '' });
 
@@ -46,7 +47,7 @@ const DebtsAdmin = () => {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-bold">{formatCurrency(d.amount)}</span>
+              <span className="font-bold">{formatCurrency(d.amount, getCurrency(settings.currency))}</span>
               <button onClick={() => openEdit(d)} className="p-1.5 text-blue-600"><Icon name="Pencil" size={14}/></button>
               <button onClick={() => { setDebts(debts.filter(x=>x.id!==d.id)); show('Eliminado','success'); }} className="p-1.5 text-red-600"><Icon name="Trash2" size={14}/></button>
             </div>

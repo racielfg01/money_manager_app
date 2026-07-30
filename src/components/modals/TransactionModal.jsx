@@ -40,7 +40,7 @@ const typeLabels = {
 };
 
 const TransactionModal = ({ editing = null }) => {
-  const { isModalOpen, setIsModalOpen, setEditingTx, addTransaction, updateTransaction, deleteTransaction, wallets, categories, settings, currencies } = useApp();
+  const { isModalOpen, setIsModalOpen, setEditingTx, addTransaction, updateTransaction, deleteTransaction, wallets, categories, settings, currencies, selectedAccountId } = useApp();
   const { show } = useToast();
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [type, setType] = useState('expense');
@@ -55,7 +55,7 @@ const TransactionModal = ({ editing = null }) => {
   const [calcFresh, setCalcFresh] = useState(false);
   const skipFocus = useRef(false);
 
-  const filteredCats = categories.filter(c => c.type === type);
+  const filteredCats = categories.filter(c => c.type === type && c.accountId === selectedAccountId);
 
   useEffect(() => {
     if (!isModalOpen) return;

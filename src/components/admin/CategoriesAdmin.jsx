@@ -41,13 +41,15 @@ const Row = ({ item, color, onEdit, onDelete }) => (
 );
 
 const CategoriesAdmin = () => {
-  const { categories, setCategories } = useApp();
+  const { categories, setCategories, selectedAccountId } = useApp();
   const { show } = useToast();
   const [tab, setTab] = useState('expense');
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ name: '', color: COLORS[0], icon: 'Tag' });
 
-  const blankCat = { name: '', type: tab, color: COLORS[0], icon: 'Tag', subcategories: [] };
+  const filtered = categories.filter(c => c.accountId === selectedAccountId);
+
+  const blankCat = { name: '', type: tab, color: COLORS[0], icon: 'Tag', subcategories: [], accountId: selectedAccountId };
   const blankSub = (parent) => ({ name: '', color: parent.color, icon: 'Tag' });
 
   const openCat = (c) => {
@@ -91,7 +93,7 @@ const CategoriesAdmin = () => {
     c.id === parentId ? { ...c, subcategories: (c.subcategories || []).filter(s => s.id !== subId) } : c
   ));
 
-  const list = categories.filter(c => c.type === tab);
+  const list = filtered.filter(c => c.type === tab);
 
   return (
     <div className="space-y-5">

@@ -4,7 +4,7 @@ import { formatCurrency } from '../../utils/helpers';
 import Icon from '../common/Icon';
 
 const CalendarView = () => {
-  const { transactions, wallets, settings, currencies } = useApp();
+  const { transactions, wallets, settings, currencies, selectedAccountId } = useApp();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(null);
   const year = currentDate.getFullYear();
@@ -14,15 +14,19 @@ const CalendarView = () => {
 
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
 
+  const accountWalletIds = useMemo(() => wallets.filter(w => w.accountId === selectedAccountId).map(w => w.id), [wallets, selectedAccountId]);
+
+  const filteredTx = useMemo(() => transactions.filter(t => accountWalletIds.includes(t.walletId)), [transactions, accountWalletIds]);
+
   const getTxForDay = (day) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return transactions.filter(t => t.date === dateStr);
+    return filteredTx.filter(t => t.date === dateStr);
   };
 
   const selectedData = useMemo(() => {
     if (!selectedDay) return null;
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
-    const txs = transactions.filter(t => t.date === dateStr);
+    const txs = filteredTx.filter(t => t.date === dateStr);
     const income = txs.filter(t => t.type === 'income');
     const expense = txs.filter(t => t.type === 'expense');
     const totalIncome = income.reduce((s, t) => s + parseFloat(t.amount), 0);
@@ -30,7 +34,7 @@ const CalendarView = () => {
     const findCurrency = (tx) => wallets.find(w => w.id === tx.walletId)?.currency;
     const primaryCurrency = getCurrency(income[0] ? findCurrency(income[0]) : expense[0] ? findCurrency(expense[0]) : settings.currency);
     return { income, expense, totalIncome, totalExpense, currency: primaryCurrency };
-  }, [selectedDay, transactions, wallets, settings, year, month, getCurrency]);
+  }, [selectedDay, filteredTx, wallets, settings, getCurrency, year, month]);
 
   return (
     <div className="p-4 sm:p-6 pb-28 view-enter">

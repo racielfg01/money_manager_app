@@ -14,12 +14,12 @@ const defaultWallets = [
 ];
 
 const defaultCategories = [
-  { id: 'c1', name: 'Salario', type: 'income', color: '#10b981', icon: 'briefcase', subcategories: [] },
-  { id: 'c2', name: 'Freelance', type: 'income', color: '#06b6d4', icon: 'laptop', subcategories: [] },
-  { id: 'c3', name: 'Comida', type: 'expense', color: '#ef4444', icon: 'utensils', subcategories: [] },
-  { id: 'c4', name: 'Transporte', type: 'expense', color: '#f59e0b', icon: 'car', subcategories: [] },
-  { id: 'c5', name: 'Ocio', type: 'expense', color: '#8b5cf6', icon: 'gamepad-2', subcategories: [] },
-  { id: 'c6', name: 'Servicios', type: 'expense', color: '#3b82f6', icon: 'zap', subcategories: [] }
+  { id: 'c1', name: 'Salario', type: 'income', color: '#10b981', icon: 'briefcase', subcategories: [], accountId: 'a1' },
+  { id: 'c2', name: 'Freelance', type: 'income', color: '#06b6d4', icon: 'laptop', subcategories: [], accountId: 'a1' },
+  { id: 'c3', name: 'Comida', type: 'expense', color: '#ef4444', icon: 'utensils', subcategories: [], accountId: 'a1' },
+  { id: 'c4', name: 'Transporte', type: 'expense', color: '#f59e0b', icon: 'car', subcategories: [], accountId: 'a1' },
+  { id: 'c5', name: 'Ocio', type: 'expense', color: '#8b5cf6', icon: 'gamepad-2', subcategories: [], accountId: 'a1' },
+  { id: 'c6', name: 'Servicios', type: 'expense', color: '#3b82f6', icon: 'zap', subcategories: [], accountId: 'a1' }
 ];
 
 const defaultSettings = {
@@ -48,6 +48,7 @@ export const AppProvider = ({ children }) => {
   const [view, setView] = useState(() => (StorageService.get('settings')?.homeScreen) || 'wallet');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTx, setEditingTx] = useState(null);
+  const [selectedAccountId, setSelectedAccountId] = useState(() => StorageService.get('selectedAccountId') || 'a1');
 
   const [budgets, setBudgets] = useState(() => StorageService.get('budgets') || []);
   const [goals, setGoals] = useState(() => StorageService.get('goals') || []);
@@ -65,6 +66,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => { StorageService.set('goals', goals); }, [goals]);
   useEffect(() => { StorageService.set('debts', debts); }, [debts]);
   useEffect(() => { StorageService.set('recurring', recurring); }, [recurring]);
+  useEffect(() => { StorageService.set('selectedAccountId', selectedAccountId); }, [selectedAccountId]);
 
   // Tema oscuro
   useEffect(() => {
@@ -131,6 +133,7 @@ export const AppProvider = ({ children }) => {
   const value = {
     transactions, wallets, accounts, setAccounts, categories, currencies, setCurrencies, settings, setSettings, view, setView, isModalOpen, setIsModalOpen, editingTx, setEditingTx,
     addTransaction, deleteTransaction, updateTransaction, setWallets, setCategories,
+    selectedAccountId, setSelectedAccountId,
     budgets, setBudgets, goals, setGoals, debts, setDebts, recurring, setRecurring
   };
 

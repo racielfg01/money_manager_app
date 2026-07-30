@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, generateId } from '../../utils/helpers';
@@ -6,8 +6,9 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const RecurringAdmin = () => {
-  const { recurring, setRecurring, wallets } = useApp();
+  const { recurring, setRecurring, wallets, settings, currencies } = useApp();
   const { show } = useToast();
+  const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ description: '', amount: 0, frequency: 'monthly', categoryId: '', walletId: wallets[0]?.id || '', type: 'expense' });
 
@@ -43,7 +44,7 @@ const RecurringAdmin = () => {
           <div key={r.id} className="bg-white dark:bg-carddark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex justify-between items-center">
             <div>
               <p className="font-bold text-sm">{r.description}</p>
-              <p className="text-xs text-gray-500">{freqLabels[r.frequency]} • {formatCurrency(r.amount)}</p>
+              <p className="text-xs text-gray-500">{freqLabels[r.frequency]} • {formatCurrency(r.amount, getCurrency(settings.currency))}</p>
             </div>
             <div className="flex gap-1">
               <button onClick={() => openEdit(r)} className="p-1.5 text-blue-600"><Icon name="Pencil" size={14}/></button>
