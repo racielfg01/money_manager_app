@@ -11,9 +11,10 @@ const CurrenciesAdmin = () => {
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ code: '', name: '', symbol: '', decimals: 2 });
 
-  const openEdit = (c) => {
-    setEditing(c ? c.code : 'new');
-    setFormData(c ? { ...c } : { code: '', name: '', symbol: '', decimals: 2 });
+  const openEdit = (item) => {
+    setEditing(item?.code ?? 'new');
+    const real = currencies.find(c => c.code === item?.code) || { code: '', name: '', symbol: '', decimals: 2 };
+    setFormData({ ...real });
   };
 
   const save = () => {
@@ -69,7 +70,7 @@ const CurrenciesAdmin = () => {
         {currencies.map(c => (
           <CrudItem
             key={c.code}
-            item={{ ...c, name: `${c.code} (${c.symbol})` }}
+            item={{ ...c, id: c.code, name: `${c.code} (${c.symbol})` }}
             onEdit={openEdit}
             onDelete={remove}
             icon="Coins"

@@ -35,7 +35,7 @@ const getBounds = (p) => {
 };
 
 const TransactionsView = () => {
-  const { transactions, deleteTransaction, categories, wallets, accounts, setAccounts, currencies, setIsModalOpen, setEditingTx } = useApp();
+  const { transactions, deleteTransaction, categories, wallets, accounts, setAccounts, currencies, setIsModalOpen, setEditingTx, selectedAccountId, setSelectedAccountId } = useApp();
   const { show } = useToast();
   const [type, setType] = useState('all');
   const [period, setPeriod] = useState('all');
@@ -44,7 +44,6 @@ const TransactionsView = () => {
   const [customTo, setCustomTo] = useState('');
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState(null);
-  const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id || '');
   const [accountDrawer, setAccountDrawer] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
 
