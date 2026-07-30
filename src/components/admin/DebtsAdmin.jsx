@@ -6,11 +6,13 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const DebtsAdmin = () => {
-  const { debts, setDebts, settings, currencies } = useApp();
+  const { debts, setDebts, settings, currencies, selectedAccountId } = useApp();
   const { show } = useToast();
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ name: '', amount: 0, type: 'owed_to_me', date: '' });
+
+  const filteredDebts = debts.filter(d => d.accountId === selectedAccountId);
 
   const openEdit = (d) => {
     setEditing(d ? d.id : 'new');
@@ -20,7 +22,7 @@ const DebtsAdmin = () => {
   const save = () => {
     if (!formData.name) return show('Nombre requerido', 'error');
     if (editing === 'new') {
-      setDebts([...debts, { ...formData, id: generateId() }]);
+      setDebts([...debts, { ...formData, id: generateId(), accountId: selectedAccountId }]);
       show('Deuda registrada', 'success');
     } else {
       setDebts(debts.map(d => d.id === editing ? { ...d, ...formData } : d));
@@ -37,8 +39,8 @@ const DebtsAdmin = () => {
         </button>
       </div>
       <div className="space-y-2">
-        {debts.length === 0 && <p className="text-center text-gray-400 py-4">Sin deudas registradas</p>}
-        {debts.map(d => (
+        {filteredDebts.length === 0 && <p className="text-center text-gray-400 py-4">Sin deudas registradas</p>}
+        {filteredDebts.map(d => (
           <div key={d.id} className="bg-white dark:bg-carddark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex justify-between items-center">
             <div>
               <p className="font-bold text-sm">{d.name}</p>

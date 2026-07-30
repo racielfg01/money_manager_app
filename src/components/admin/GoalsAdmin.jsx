@@ -6,11 +6,13 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const GoalsAdmin = () => {
-  const { goals, setGoals, settings, currencies } = useApp();
+  const { goals, setGoals, settings, currencies, selectedAccountId } = useApp();
   const { show } = useToast();
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ name: '', targetAmount: 0, currentAmount: 0, deadline: '' });
+
+  const filteredGoals = goals.filter(g => g.accountId === selectedAccountId);
 
   const openEdit = (g) => {
     setEditing(g ? g.id : 'new');
@@ -20,7 +22,7 @@ const GoalsAdmin = () => {
   const save = () => {
     if (!formData.name) return show('Nombre requerido', 'error');
     if (editing === 'new') {
-      setGoals([...goals, { ...formData, id: generateId() }]);
+      setGoals([...goals, { ...formData, id: generateId(), accountId: selectedAccountId }]);
       show('Objetivo creado', 'success');
     } else {
       setGoals(goals.map(g => g.id === editing ? { ...g, ...formData } : g));
@@ -37,8 +39,8 @@ const GoalsAdmin = () => {
         </button>
       </div>
       <div className="space-y-2">
-        {goals.length === 0 && <p className="text-center text-gray-400 py-4">Sin objetivos de ahorro</p>}
-        {goals.map(g => {
+        {filteredGoals.length === 0 && <p className="text-center text-gray-400 py-4">Sin objetivos de ahorro</p>}
+        {filteredGoals.map(g => {
           const percent = Math.min(100, (g.currentAmount / g.targetAmount) * 100).toFixed(0);
           return (
             <div key={g.id} className="bg-white dark:bg-carddark p-4 rounded-2xl border border-gray-100 dark:border-gray-800">

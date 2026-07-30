@@ -6,11 +6,13 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const BudgetsAdmin = () => {
-  const { budgets, setBudgets, categories, settings, currencies } = useApp();
+  const { budgets, setBudgets, categories, settings, currencies, selectedAccountId } = useApp();
   const { show } = useToast();
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ categoryId: '', limit: 0 });
+
+  const filteredBudgets = budgets.filter(b => b.accountId === selectedAccountId);
 
   const openEdit = (b) => {
     setEditing(b ? b.id : 'new');
@@ -20,7 +22,7 @@ const BudgetsAdmin = () => {
   const save = () => {
     if (!formData.categoryId || formData.limit <= 0) return show('Datos inválidos', 'error');
     if (editing === 'new') {
-      setBudgets([...budgets, { ...formData, id: generateId() }]);
+      setBudgets([...budgets, { ...formData, id: generateId(), accountId: selectedAccountId }]);
       show('Presupuesto creado', 'success');
     } else {
       setBudgets(budgets.map(b => b.id === editing ? { ...b, ...formData } : b));
@@ -39,8 +41,8 @@ const BudgetsAdmin = () => {
         </button>
       </div>
       <div className="space-y-2">
-        {budgets.length === 0 && <p className="text-center text-gray-400 py-4">Sin presupuestos definidos</p>}
-        {budgets.map(b => {
+        {filteredBudgets.length === 0 && <p className="text-center text-gray-400 py-4">Sin presupuestos definidos</p>}
+        {filteredBudgets.map(b => {
           const cat = categories.find(c => c.id === b.categoryId);
           return (
             <div key={b.id} className="bg-white dark:bg-carddark p-4 rounded-2xl border border-gray-100 dark:border-gray-800">

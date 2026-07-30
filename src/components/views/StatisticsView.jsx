@@ -57,11 +57,11 @@ const StatisticsView = () => {
                   const pct = amount / stats.totalExp;
                   const prevTotal = stats.sortedCats.slice(0, i).reduce((s, [,a]) => s + a, 0);
                   const prevPct = prevTotal / stats.totalExp;
-                  const offset = prevPct * 360;
-                  const length = pct * 360;
+                  const length = pct * 100;
+                  const offset = prevPct * 100;
                   const color = PIE_COLORS[i % PIE_COLORS.length];
                   return (
-                    <circle key={key} cx="18" cy="18" r="15.915" fill="none" stroke={color} strokeWidth="3.5" strokeDasharray={`${length} ${360 - length}`} strokeDashoffset={-offset} transform="rotate(-90 18 18)" strokeLinecap="butt" />
+                    <circle key={key} cx="18" cy="18" r="15.915" fill="none" stroke={color} strokeWidth="3.5" strokeDasharray={`${length} ${100 - length}`} strokeDashoffset={-offset} transform="rotate(-90 18 18)" strokeLinecap="butt" />
                   );
                 })}
               </svg>

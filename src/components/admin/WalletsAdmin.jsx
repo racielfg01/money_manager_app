@@ -7,7 +7,7 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const WalletsAdmin = () => {
-  const { wallets, setWallets, accounts, currencies, settings } = useApp();
+  const { wallets, setWallets, accounts, currencies, settings, selectedAccountId } = useApp();
   const { show } = useToast();
   const [editing, setEditing] = useState(null);
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
@@ -36,28 +36,27 @@ const WalletsAdmin = () => {
     show('Billetera eliminada', 'success');
   };
 
-  const grouped = accounts.map(a => ({
-    account: a,
-    items: wallets.filter(w => (w.accountId || accounts[0].id) === a.id)
-  }));
+  const filteredWallets = wallets.filter(w => (w.accountId || accounts[0]?.id) === selectedAccountId);
+  const currentAccount = accounts.find(a => a.id === selectedAccountId);
 
   return (
     <div className="space-y-5">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">Billeteras por cuenta</p>
+        <p className="text-sm text-gray-500">Billeteras</p>
         <button onClick={() => openEdit(null)} className="text-sm font-bold text-blue-600 flex items-center gap-1 press-effect">
           <Icon name="PlusCircle" size={16} /> Nueva
         </button>
       </div>
 
-      {grouped.map(({ account, items }) => (
-        <div key={account.id} className="space-y-2">
-          <div className="flex items-center gap-2 px-1 text-indigo-600 dark:text-indigo-400">
-            <Icon name={account.icon} size={14} />
-            <h4 className="text-xs font-bold uppercase tracking-wider">{account.name}</h4>
+      <div className="space-y-2">
+        {currentAccount && (
+          <div className="flex items-center gap-2 px-1 text-indigo-600 dark:text-indigo-400 mb-2">
+            <Icon name={currentAccount.icon} size={14} />
+            <h4 className="text-xs font-bold uppercase tracking-wider">{currentAccount.name}</h4>
           </div>
-          {items.length === 0 && <p className="text-xs text-gray-400 pl-2">Sin billeteras</p>}
-          {items.map(w => (
+        )}
+        {filteredWallets.length === 0 && <p className="text-xs text-gray-400 pl-2">Sin billeteras</p>}
+        {filteredWallets.map(w => (
             <CrudItem
               key={w.id}
               item={w}
@@ -69,7 +68,6 @@ const WalletsAdmin = () => {
             />
           ))}
         </div>
-      ))}
 
       <Modal isOpen={!!editing} onClose={() => setEditing(null)} title={editing === 'new' ? 'Nueva Billetera' : 'Editar Billetera'}>
         <div className="space-y-4">

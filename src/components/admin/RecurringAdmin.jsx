@@ -6,11 +6,13 @@ import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
 const RecurringAdmin = () => {
-  const { recurring, setRecurring, wallets, settings, currencies } = useApp();
+  const { recurring, setRecurring, wallets, settings, currencies, selectedAccountId } = useApp();
   const { show } = useToast();
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState({ description: '', amount: 0, frequency: 'monthly', categoryId: '', walletId: wallets[0]?.id || '', type: 'expense' });
+
+  const filteredRecurring = recurring.filter(r => r.accountId === selectedAccountId);
 
   const openEdit = (r) => {
     setEditing(r ? r.id : 'new');
@@ -20,7 +22,7 @@ const RecurringAdmin = () => {
   const save = () => {
     if (!formData.description) return show('Descripción requerida', 'error');
     if (editing === 'new') {
-      setRecurring([...recurring, { ...formData, id: generateId() }]);
+      setRecurring([...recurring, { ...formData, id: generateId(), accountId: selectedAccountId }]);
       show('Transacción recurrente creada', 'success');
     } else {
       setRecurring(recurring.map(r => r.id === editing ? { ...r, ...formData } : r));
@@ -39,8 +41,8 @@ const RecurringAdmin = () => {
         </button>
       </div>
       <div className="space-y-2">
-        {recurring.length === 0 && <p className="text-center text-gray-400 py-4">Sin transacciones recurrentes</p>}
-        {recurring.map(r => (
+        {filteredRecurring.length === 0 && <p className="text-center text-gray-400 py-4">Sin transacciones recurrentes</p>}
+        {filteredRecurring.map(r => (
           <div key={r.id} className="bg-white dark:bg-carddark p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex justify-between items-center">
             <div>
               <p className="font-bold text-sm">{r.description}</p>
