@@ -39,6 +39,12 @@ const typeLabels = {
   transfer: { label: 'Transfer.', icon: 'ArrowLeftRight', color: 'blue' }
 };
 
+const typeActiveStyles = {
+  income: 'bg-green-50 dark:bg-green-900/40 text-green-600 dark:text-green-400 ring-2 ring-green-500/30',
+  expense: 'bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-400 ring-2 ring-red-500/30',
+  transfer: 'bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 ring-2 ring-blue-500/30'
+};
+
 const TransactionModal = ({ editing = null }) => {
   const { isModalOpen, setIsModalOpen, setEditingTx, addTransaction, updateTransaction, deleteTransaction, wallets, categories, settings, currencies, selectedAccountId } = useApp();
   const { show } = useToast();
@@ -225,7 +231,7 @@ const TransactionModal = ({ editing = null }) => {
               onClick={() => { setType(key); setCatId(''); }}
               className={`py-3 px-2 rounded-xl text-sm font-semibold flex flex-col items-center gap-1 transition-all press-effect ${
                 active
-                  ? `bg-${val.color}-50 dark:bg-${val.color}-950/40 text-${val.color}-600 dark:text-${val.color}-400 ring-2 ring-${val.color}-500/30`
+                  ? typeActiveStyles[key]
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
               }`}
             >
