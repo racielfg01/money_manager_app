@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -62,7 +62,7 @@ const TransactionModal = ({ editing = null }) => {
   const skipFocus = useRef(false);
 
   const filteredCats = categories.filter(c => c.type === type && c.accountId === selectedAccountId);
-  const accountWallets = wallets.filter(w => w.accountId === selectedAccountId);
+  const accountWallets = useMemo(() => wallets.filter(w => w.accountId === selectedAccountId), [wallets, selectedAccountId]);
 
   useEffect(() => {
     if (!isModalOpen) return;
