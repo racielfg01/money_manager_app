@@ -2,17 +2,11 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { generateId } from '../../utils/helpers';
+import { CATEGORY_ICONS } from '../../utils/icons';
 import Modal from '../common/Modal';
 import Icon from '../common/Icon';
 
-const ICONS = [
-  'Tag', 'Home', 'Car', 'Utensils', 'ShoppingCart', 'Coffee', 'Gift', 'Wallet',
-  'Briefcase', 'Laptop', 'Gamepad2', 'Zap', 'Heart', 'Music', 'Book', 'Plane',
-  'Train', 'Smartphone', 'Wifi', 'Film', 'Dumbbell', 'ShoppingBag', 'Pizza', 'Apple',
-  'Baby', 'Banknote', 'CreditCard', 'PiggyBank', 'Receipt', 'TrendingUp', 'Star',
-  'Award', 'Camera', 'Shirt', 'Pill', 'GraduationCap', 'Fuel', 'Lightbulb', 'TreePine',
-  'Cat', 'Dog', 'Smile', 'DollarSign', 'Euro', 'Bitcoin', 'Building', 'MapPin', 'Cookie', 'Store'
-];
+const ICONS = CATEGORY_ICONS;
 
 const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', '#6b7280'];
 

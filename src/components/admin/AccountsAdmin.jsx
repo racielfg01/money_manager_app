@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { generateId } from '../../utils/helpers';
+import { ACCOUNT_ICONS } from '../../utils/icons';
 import CrudItem from '../common/CrudItem';
 import Modal from '../common/Modal';
 import Icon from '../common/Icon';
-
-const ACCOUNT_ICONS = ['User', 'Users', 'Briefcase', 'Home', 'Building', 'Heart', 'Star', 'Globe', 'Landmark', 'PiggyBank', 'CreditCard', 'Wallet'];
 
 const AccountsAdmin = () => {
   const { accounts, setAccounts, wallets } = useApp();

@@ -48,14 +48,15 @@ const TransactionModal = ({ editing = null }) => {
   const [desc, setDesc] = useState('');
   const [catId, setCatId] = useState('');
   const [subId, setSubId] = useState('');
-  const [walletId, setWalletId] = useState(wallets[0]?.id || '');
-  const [toWalletId, setToWalletId] = useState(wallets[1]?.id || wallets[0]?.id || '');
+  const [walletId, setWalletId] = useState('');
+  const [toWalletId, setToWalletId] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [showCalc, setShowCalc] = useState(false);
   const [calcFresh, setCalcFresh] = useState(false);
   const skipFocus = useRef(false);
 
   const filteredCats = categories.filter(c => c.type === type && c.accountId === selectedAccountId);
+  const accountWallets = wallets.filter(w => w.accountId === selectedAccountId);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -65,8 +66,8 @@ const TransactionModal = ({ editing = null }) => {
       setDesc(editing.description || '');
       setCatId(editing.categoryId || '');
       setSubId(editing.subcategoryId || '');
-      setWalletId(editing.walletId || wallets[0]?.id || '');
-      setToWalletId(editing.toWalletId || wallets[1]?.id || wallets[0]?.id || '');
+      setWalletId(editing.walletId || accountWallets[0]?.id || '');
+      setToWalletId(editing.toWalletId || accountWallets[1]?.id || accountWallets[0]?.id || '');
       setDate(editing.date || new Date().toISOString().split('T')[0]);
     } else {
       setType('expense');
@@ -74,13 +75,13 @@ const TransactionModal = ({ editing = null }) => {
       setDesc('');
       setCatId('');
       setSubId('');
-      setWalletId(wallets[0]?.id || '');
-      setToWalletId(wallets[1]?.id || wallets[0]?.id || '');
+      setWalletId(accountWallets[0]?.id || '');
+      setToWalletId(accountWallets[1]?.id || accountWallets[0]?.id || '');
       setDate(new Date().toISOString().split('T')[0]);
     }
     setShowCalc(false);
     setCalcFresh(false);
-  }, [isModalOpen, editing, wallets]);
+  }, [isModalOpen, editing, accountWallets]);
 
   const appendZeros = () => {
     const zeros = '0'.repeat(settings.zerosMode);
@@ -333,7 +334,7 @@ const TransactionModal = ({ editing = null }) => {
                 onChange={e => setWalletId(e.target.value)}
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
-                {wallets.map(w => (
+                {accountWallets.map(w => (
                   <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, getCurrency(w.currency))}</option>
                 ))}
               </select>
@@ -348,7 +349,7 @@ const TransactionModal = ({ editing = null }) => {
                 onChange={e => setWalletId(e.target.value)}
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
-                {wallets.map(w => (
+                {accountWallets.map(w => (
                   <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, getCurrency(w.currency))}</option>
                 ))}
               </select>
@@ -360,7 +361,7 @@ const TransactionModal = ({ editing = null }) => {
                 onChange={e => setToWalletId(e.target.value)}
                 className="w-full p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-green-500 dark:focus:border-green-500 focus:outline-none transition-colors text-sm text-gray-700 dark:text-gray-200"
               >
-                {wallets.filter(w => w.id !== walletId).map(w => (
+                {accountWallets.filter(w => w.id !== walletId).map(w => (
                   <option key={w.id} value={w.id}>{w.name} — {formatCurrency(w.balance, getCurrency(w.currency))}</option>
                 ))}
               </select>

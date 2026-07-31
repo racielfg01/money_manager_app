@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useToast } from '../../context/ToastContext';
 import { formatCurrency, generateId } from '../../utils/helpers';
+import { WALLET_ICONS } from '../../utils/icons';
 import CrudItem from '../common/CrudItem';
 import Modal from '../common/Modal';
 import Icon from '../common/Icon';
@@ -11,11 +12,11 @@ const WalletsAdmin = () => {
   const { show } = useToast();
   const [editing, setEditing] = useState(null);
   const getCurrency = useCallback((code) => currencies.find(c => c.code === code) || { code, decimals: 2 }, [currencies]);
-  const [formData, setFormData] = useState({ name: '', balance: 0, currency: settings.currency, icon: 'wallet', accountId: accounts[0]?.id });
+  const [formData, setFormData] = useState({ name: '', balance: 0, currency: settings.currency, icon: 'wallet', accountId: selectedAccountId });
 
   const openEdit = (w) => {
     setEditing(w ? w.id : 'new');
-    setFormData(w || { name: '', balance: 0, currency: settings.currency, icon: 'wallet', accountId: accounts[0]?.id });
+    setFormData(w || { name: '', balance: 0, currency: settings.currency, icon: 'wallet', accountId: selectedAccountId });
   };
 
   const save = () => {
@@ -74,6 +75,22 @@ const WalletsAdmin = () => {
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Nombre</label>
             <input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700" placeholder="Ej: Ahorros" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Icono</label>
+            <div className="grid grid-cols-8 gap-1.5 max-h-44 overflow-y-auto p-1">
+              {WALLET_ICONS.map(name => (
+                <button
+                  key={name}
+                  onClick={() => setFormData({...formData, icon: name})}
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
+                    formData.icon === name ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 ring-2 ring-blue-500/40' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <Icon name={name} size={18} />
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-500 mb-1">Cuenta</label>

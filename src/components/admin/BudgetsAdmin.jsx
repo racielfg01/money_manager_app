@@ -75,7 +75,7 @@ const BudgetsAdmin = () => {
             <label className="block text-xs font-semibold text-gray-500 mb-1">Categoría</label>
             <select value={formData.categoryId} onChange={e => setFormData({...formData, categoryId: e.target.value})} className="w-full p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
               <option value="">Seleccionar...</option>
-              {categories.filter(c => c.type === 'expense').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {categories.filter(c => c.type === 'expense' && c.accountId === selectedAccountId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
